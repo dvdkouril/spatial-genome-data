@@ -6,7 +6,10 @@ visualized using [chromospace](https://github.com/dvdkouril/chromospace) and
 
 ## Quickstart
 
-Run the notebooks for data processing for any of the datasets in individual subfolders, using [juv](https://github.com/manzt/juv). For example:
+Run the notebooks for data processing for any of the datasets in individual
+subfolders, using [juv](https://github.com/manzt/juv). 
+
+For example:
 ```sh
 cd stevens-2017
 juv run notebook.ipynb
@@ -24,9 +27,22 @@ We aim to keep track of the data sources, original publications, and processing
 pipeline to go from the published data to the structures in Apache Arrow
 format.
 
+This repository starts with already existing 3D structures and essentially
+"just" converts them from their original file formats (pdb, txt, xyz, tsv,
+etc.) to a unified Apache Arrow format. This means that the repo does not
+include code to run any of the software that actually creates those structures
+(i.e., running simulations on Hi-C matrix data).
+
 ## Available Data
 
-Stevens et al. 2017: "3D structures of individual mammalian genomes studied by single-cell Hi-C"
-- [https://doi.org/10.1038/nature21429](https://doi.org/10.1038/nature21429)
-- GEO: [GSE80280](https://www.ncbi.nlm.nih.gov/geo/query/acc.cgi?acc=GSE80280)
-- Organism: Mus musculus
+### Full-genome models
+
+- Stevens et al. 2017: "3D structures of individual mammalian genomes studied
+by single-cell Hi-C"
+([https://doi.org/10.1038/nature21429](https://doi.org/10.1038/nature21429))
+
+### "Chunks"
+
+- Sun et al. 2021: High-resolution single-cell 3D-models of chromatin ensembles
+during Drosophila embryogenesis
+([https://doi.org/10.1038/s41467-020-20490-9](https://doi.org/10.1038/s41467-020-20490-9))
