@@ -4,6 +4,14 @@ Gathering examples of 3D chromatin structures ("spatial genome" data) to be
 visualized using [chromospace](https://github.com/dvdkouril/chromospace) and
 [chromospyce](https://github.com/dvdkouril/chromospyce).
 
+## Quickstart
+
+Run the notebooks for data processing for any of the datasets in individual subfolders, using [juv](https://github.com/manzt/juv). For example:
+```sh
+cd stevens-2017
+juv run notebook.ipynb
+```
+
 ## Why
 
 One of the problems with visualization of 3D structures of chromatin is that
