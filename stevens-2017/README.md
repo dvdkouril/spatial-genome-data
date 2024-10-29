@@ -10,7 +10,8 @@ Process:
 - Copied only the cell structures (identified by the `.pdb` file).
 
 TODO:
-- [ ] make it a model:
-    - [ ] store bin chromosomes
-    - [ ] store bin coordinates
+- [x] make it a model:
+    - [x] store bin chromosomes
+    - [x] store bin coordinates
+        - [ ] make sure coordinates are correct
 - [ ] figure out what the multiple structures in single PDB mean
