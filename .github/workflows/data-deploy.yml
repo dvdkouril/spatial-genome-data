@@ -51,9 +51,10 @@ jobs:
           aws configure set aws_secret_access_key $AWS_SECRET_ACCESS_KEY
           aws configure set region us-east-1
           aws configure set s3.endpoint_url https://b7b20d00d32c93be320b083b160c47b7.r2.cloudflarestorage.com
-
-      - name: Upload to Cloudflare R2
-        run: |
           aws s3 cp ./some-files s3://spatial-genome-data --recursive
+
+      # - name: Upload to Cloudflare R2
+      #   run: |
+      #     aws s3 cp ./some-files s3://spatial-genome-data --recursive
         # run: |
         #   aws s3 cp ./your-directory s3://your-bucket-name --recursive
