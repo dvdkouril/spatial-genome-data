@@ -15,12 +15,18 @@ jobs:
           curl -L -o ./stevens-2017-input.tar.gz https://pub-5c3f8ce35c924114a178c6e929fc3ac7.r2.dev/stevens-2017-input.tar.gz
           tar -xzvf ./stevens-2017-input.tar.gz -C ./stevens-2017
           rm ./stevens-2017-input.tar.gz
-      - run: |
-          pwd
-          ls
-          cd stevens-2017
-          pwd
-          ls
+      # - run: |
+      #     pwd
+      #     ls
+      #     cd stevens-2017
+      #     pwd
+      #     ls
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@v3
+
+      - run: uv tool install juv
+      - run: juv --help
       
       # - name: Deploy
       #   uses: cloudflare/wrangler-action@v3
