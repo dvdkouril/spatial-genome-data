@@ -9,8 +9,15 @@ jobs:
     name: Deploy
     steps:
       - uses: actions/checkout@v4
-      - name: Deploy
-        uses: cloudflare/wrangler-action@v3
-        with:
-          apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
-          command: r2 object put spatial-genome-data/README.md --file=README.md
+      # Download input data
+      - name: Download and unzip - Stevens 2017
+        run: |
+          curl -L -o ./stevens-2017-input.tar.gz https://pub-5c3f8ce35c924114a178c6e929fc3ac7.r2.dev/stevens-2017-input.tar.gz
+          tar -xzvf ./stevens-2017-input.tar.gz
+      - run: ls
+      
+      # - name: Deploy
+      #   uses: cloudflare/wrangler-action@v3
+      #   with:
+      #     apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+      #     command: r2 object put spatial-genome-data/README.md --file=README.md
