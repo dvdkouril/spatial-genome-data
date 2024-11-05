@@ -14,6 +14,7 @@ jobs:
         run: |
           curl -L -o ./stevens-2017-input.tar.gz https://pub-5c3f8ce35c924114a178c6e929fc3ac7.r2.dev/stevens-2017-input.tar.gz
           tar -xzvf ./stevens-2017-input.tar.gz
+          rm ./stevens-2017-input.tar.gz
       - run: ls
       
       # - name: Deploy
