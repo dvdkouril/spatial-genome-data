@@ -16,8 +16,10 @@ jobs:
           tar -xzvf ./stevens-2017-input.tar.gz -C ./stevens-2017
           rm ./stevens-2017-input.tar.gz
       - run: |
+          pwd
           ls
           cd stevens-2017
+          pwd
           ls
       
       # - name: Deploy
