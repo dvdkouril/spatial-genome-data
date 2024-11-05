@@ -27,6 +27,13 @@ jobs:
 
       - run: uv tool install juv
       - run: juv --help
+      - name: Process files via notebook.ipynb
+        run: juv exec notebook.ipynb
+        working-directory: ./stevens-2017
+      - run: |
+          cd stevens-2017
+          pwd
+          ls
       
       # - name: Deploy
       #   uses: cloudflare/wrangler-action@v3
