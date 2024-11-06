@@ -5,6 +5,16 @@
 - GEO: [GSE80280](https://www.ncbi.nlm.nih.gov/geo/query/acc.cgi?acc=GSE80280)
 - Organism: Mus musculus
 
+<div align="center">
+  
+|List of structures (with links)|
+| :---: |
+| [structures.md](./structures.md) |
+
+</div>
+
+---
+
 Process:
 - Downloaded `GSE80280_RAW.tar` (19.7 Gb) from the GEO repository.
 - Copied only the cell structures (identified by the `.pdb` file).
