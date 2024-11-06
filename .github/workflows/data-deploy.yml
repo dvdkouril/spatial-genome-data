@@ -1,0 +1,36 @@
+name: Processing into cloud
+
+on:
+  workflow_dispatch:
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    name: Deploy
+    env:
+      AWS_ACCESS_KEY_ID: ${{ secrets.R2_ACCESS_KEY_ID }}
+      AWS_SECRET_ACCESS_KEY: ${{ secrets.R2_SECRET_ACCESS_KEY }}
+      R2_BUCKET_NAME: ${{ secrets.R2_BUCKET_NAME }}
+      R2_ENDPOINT_URL: ${{ secrets.R2_ENDPOINT_URL }}
+    steps:
+      - uses: actions/checkout@v4
+      - name: Download and unzip - Stevens 2017
+        run: |
+          curl -L -o ./stevens-2017-input.tar.gz https://pub-5c3f8ce35c924114a178c6e929fc3ac7.r2.dev/stevens-2017-input.tar.gz
+          tar -xzvf ./stevens-2017-input.tar.gz -C ./stevens-2017
+          rm ./stevens-2017-input.tar.gz
+
+      - name: Setup uv
+        uses: astral-sh/setup-uv@v3
+        with:
+          version: "0.4.x"
+      - run: uv tool install juv
+      - name: Process files via notebook.ipynb
+        run: juv exec notebook.ipynb
+        working-directory: ./stevens-2017
+
+      - name: Upload files to Cloudflare R2
+        run: |
+          uv run --with awscli aws s3 cp ./stevens-2017/out "s3://${R2_BUCKET_NAME}/" \
+            --recursive \
+            --endpoint-url "${R2_ENDPOINT_URL}"
