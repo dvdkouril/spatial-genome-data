@@ -40,6 +40,7 @@ include code to run any of the software that actually creates those structures
 - Stevens et al. 2017: "3D structures of individual mammalian genomes studied
 by single-cell Hi-C"
 ([https://doi.org/10.1038/nature21429](https://doi.org/10.1038/nature21429))
+- Tan et al. 2018: "Three-dimensional genome structures of single diploid human cells" ([https://doi.org/10.1126/science.aat5641](https://doi.org/10.1126/science.aat5641))
 
 ### "Chunks"
 
