@@ -29,6 +29,18 @@ jobs:
         run: juv exec notebook.ipynb
         working-directory: ./stevens-2017
 
+      - uses: denoland/setup-deno@v2
+        with:
+          deno-version: v2.x
+      - name: List structures in structures.md
+        run: |
+          deno run -A generate-list.ts stevens-2017/out/out_file.txt stevens-2017/structures.md
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add stevens-2017/structures.md
+          git commit -m "Regenerate list of structures"
+          git push
+
       - name: Upload files to Cloudflare R2
         run: |
           uv run --with awscli aws s3 cp ./stevens-2017/out "s3://${R2_BUCKET_NAME}/" \
