@@ -5,8 +5,19 @@
 - GEO: [GSE117876](http://www.ncbi.nlm.nih.gov/geo/query/acc.cgi?acc=GSE117876)
 - Organism: Homo sapiens
 
+<div align="center">
+  
+|List of structures (with links)|
+| :---: |
+| [structures.md](./structures.md) |
+
+</div>
+
+---
+
 Process:
 - Downloaded `GSE117876_RAW.tar` (4.3 Gb) from the GEO repository.
 - Copied only the cell structures (identified by the `.3dg.txt` in filename).
 - Unziped all: `gzip -d *.gz`
 - Only selected and used the smaller files (around 3 MB)
+
