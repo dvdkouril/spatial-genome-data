@@ -5,6 +5,8 @@
 
 # ignore the input files for datasets (can be downloaded from cloud)
 tan-2018/GSE117876_RAW
+stevens-2017/GSE80280_RAW
 
 # ignore the output files as well (stored in cloud too)
 tan-2018/out
+stevens-2017/out
