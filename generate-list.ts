@@ -15,7 +15,7 @@ for (const file of generatedFiles.split("\n")) {
 	}
 	const arrowURL = `${baseBucketURL}/${file}.arrow`;
 	const parquetURL = `${baseBucketURL}/${file}.parquet`;
-	const chspaceURL = `https://app.chromospace.org/?source=${arrowURL}`;
+	const chspaceURL = `https://chspace.xyz/?source=${arrowURL}`;
 	const line = `|${file}|[.arrow](${arrowURL}) / [.parquet](${parquetURL})|[open](${chspaceURL})|\n`;
 	content = content + line;
 }
