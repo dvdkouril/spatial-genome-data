@@ -19,3 +19,6 @@ Process:
 - Downloaded `41586_2010_BFnature08973_MOESM239_ESM.pdb` (1.9 MB) from the
 Nature website ("Supplementary Information").
 - Edited to proper newline characters (Unix) in vim via `:%s/\r/\r/g`.
+
+TODO:
+- [ ] compute/figure out coordinates for the bins
