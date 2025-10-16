@@ -37,17 +37,25 @@ def _(modelFilePath, pa):
 
 
 @app.cell
-def _(modelFileName, table):
-    # Save as .csv to disk
-    newCsvFileName = f"{modelFileName.split(".")[0]}.csv"
-    df = table.to_pandas()
-    df.to_csv(newCsvFileName)
-    return
+def _(table):
+    modelDF = table.to_pandas()
+    return (modelDF,)
 
 
 @app.cell
-def _(table):
-    table
+def _(modelDF):
+    # modelDF["chr"] = modelDF["chr"].spli
+    modelDFprocessed = modelDF.copy()
+    modelDFprocessed[["chr", "patmat"]] = modelDF["chr"].str.extract(r"(\d+)\((\w+)\)")
+    modelDFprocessed
+    return (modelDFprocessed,)
+
+
+@app.cell
+def _(modelDFprocessed, modelFileName):
+    # Save as .csv to disk
+    newCsvFileName = f"{modelFileName.split(".")[0]}.csv"
+    modelDFprocessed.to_csv(newCsvFileName, index=False)
     return
 
 
