@@ -8,29 +8,26 @@ app = marimo.App(width="medium")
 def _():
     import pyarrow as pa
     import pandas as pd
-    return (pa,)
+    import requests
+    return pa, requests
 
 
 @app.cell
 def _():
     modelFileName = "Tan-2018_GSM3271347_gm12878_01.arrow"
-    modelPath = "tan-2018/out"
-    modelFilePath = f"../../{modelPath}/{modelFileName}"
-    modelFilePath
-    return modelFileName, modelFilePath
+    modelFileUrl = f"https://pub-5c3f8ce35c924114a178c6e929fc3ac7.r2.dev/{modelFileName}"
+    return modelFileName, modelFileUrl
 
 
 @app.cell
-def _(modelFilePath, pa):
-    # 1. Read the original spatial model file
-    with open(modelFilePath, 'rb') as file:
-        content = file.read()
-        print(content[0:10])
+def _(modelFileUrl, pa, requests):
+    response = requests.get(modelFileUrl)
+    response.raise_for_status()  # raises if status != 200
 
-        # read the ipc
-        reader = pa.ipc.open_file(file)
-        table = reader.read_all()
-        # print(table)
+    data = response.content  # this is bytes
+
+    reader = pa.ipc.RecordBatchFileReader(pa.py_buffer(data))
+    table = reader.read_all()
 
     print(table)
     return (table,)
