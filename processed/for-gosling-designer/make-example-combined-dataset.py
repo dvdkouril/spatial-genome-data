@@ -54,7 +54,7 @@ def _(modelDF):
 @app.cell
 def _(modelDFprocessed, modelFileName):
     # Save as .csv to disk
-    newCsvFileName = f"{modelFileName.split(".")[0]}.csv"
+    newCsvFileName = f"out/{modelFileName.split(".")[0]}.csv"
     modelDFprocessed.to_csv(newCsvFileName, index=False)
     return
 
