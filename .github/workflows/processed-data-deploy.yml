@@ -23,7 +23,7 @@ jobs:
           version: "0.4.x"
 
       - name: Run the processing script (marimo notebook)
-        run: uv run --with marimo --with pyarrow --with pandas make-example-combined-dataset.py
+        run: uv run --with marimo --with pyarrow --with pandas --with requests make-example-combined-dataset.py
         working-directory: ./processed/for-gosling-designer
 
       - name: Upload files to Cloudflare R2
