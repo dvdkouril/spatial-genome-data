@@ -1,0 +1,61 @@
+name: Upload processed data into cloud
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    name: Deploy
+    env:
+      AWS_ACCESS_KEY_ID: ${{ secrets.R2_ACCESS_KEY_ID }}
+      AWS_SECRET_ACCESS_KEY: ${{ secrets.R2_SECRET_ACCESS_KEY }}
+      R2_BUCKET_NAME: ${{ secrets.R2_BUCKET_NAME }}
+      R2_ENDPOINT_URL: ${{ secrets.R2_ENDPOINT_URL }}
+    steps:
+      - uses: actions/checkout@v4
+      - name: Setup uv
+        uses: astral-sh/setup-uv@v3
+        with:
+          version: "0.4.x"
+      # - run: uv tool install juv
+      # - name: Process files via notebook.ipynb (Stevens)
+      #   run: juv exec notebook.ipynb
+      #   working-directory: ./stevens-2017
+      # - name: Process files via notebook.ipynb (Tan)
+      #   run: juv exec notebook.ipynb
+      #   working-directory: ./tan-2018
+
+      # - uses: denoland/setup-deno@v2
+      #   with:
+      #     deno-version: v2.x
+      # - name: List structures in structures.md
+      #   run: |
+      #     deno run -A generate-list.ts stevens-2017/out/out_file.txt stevens-2017/structures.md
+      #     deno run -A generate-list.ts tan-2018/out/out_file.txt tan-2018/structures.md
+      #     git config user.name "github-actions[bot]"
+      #     git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+      #     git add stevens-2017/structures.md tan-2018/structures.md
+      #
+      #     # Check if there are changes before committing
+      #     if git diff --staged --quiet; then
+      #       echo "No changes to commit"
+      #     else
+      #       git commit -m "Regenerate list of structures"
+      #       git push
+      #     fi
+      #     # git commit -m "Regenerate list of structures"
+      #     # git push
+
+      - name: Run the processing script (marimo notebook)
+        run: uv run --with marimo make-example-combined-dataset.py
+        working-directory: ./processed/for-gosling-designer
+
+      - name: Upload files to Cloudflare R2
+        run: |
+          uv run --with awscli aws s3 cp ./processed/for-gosling-designer/out "s3://${R2_BUCKET_NAME}/" \
+            --recursive \
+            --endpoint-url "${R2_ENDPOINT_URL}"
