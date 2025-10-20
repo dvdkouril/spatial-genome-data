@@ -9,7 +9,8 @@ def _():
     import pyarrow as pa
     import pandas as pd
     import requests
-    return pa, requests
+    from pathlib import Path
+    return Path, pa, requests
 
 
 @app.cell
@@ -53,8 +54,11 @@ def _(modelDF):
 
 
 @app.cell
-def _(modelDFprocessed, modelFileName):
+def _(Path, modelDFprocessed, modelFileName):
     # Save as .csv to disk
+    out_folder = Path("out")
+    out_folder.mkdir(parents=True, exist_ok=True)
+
     fileKey = modelFileName.split(".")[0]
     newCsvFileName = f"out/{fileKey}.csv"
     modelDFprocessed.to_csv(newCsvFileName, index=False)
