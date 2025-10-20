@@ -7,10 +7,11 @@ app = marimo.App(width="medium")
 @app.cell
 def _():
     import pyarrow as pa
+    import pyarrow.parquet as pq
     import pandas as pd
     import requests
     from pathlib import Path
-    return Path, pa, requests
+    return Path, pa, pq, requests
 
 
 @app.cell
@@ -59,14 +60,34 @@ def _(Path, modelDFprocessed, modelFileName):
     out_folder = Path("out")
     out_folder.mkdir(parents=True, exist_ok=True)
 
-    fileKey = modelFileName.split(".")[0]
+    fileKey = f"forGD_{modelFileName.split(".")[0]}"
     newCsvFileName = f"out/{fileKey}.csv"
     modelDFprocessed.to_csv(newCsvFileName, index=False)
 
     # write to outputs array: this will then be used to generate the structures.md table
     outputs = []
     outputs.append(f"{fileKey}")
-    return (outputs,)
+    return fileKey, outputs
+
+
+@app.cell
+def _(pa):
+    def write_to_file(outfile_path, table):
+        with pa.OSFile(outfile_path, 'wb') as sink:
+            with pa.ipc.RecordBatchFileWriter(sink, table.schema) as writer:
+                writer.write_table(table)
+    return (write_to_file,)
+
+
+@app.cell
+def _(fileKey, pq, table, write_to_file):
+    # Write also as .parquet and .arrow file: 
+    outputpath_parquet = f'out/{fileKey}.parquet'
+    pq.write_table(table, outputpath_parquet, compression=None)
+            
+    outputpath_arrow = f'out/{fileKey}.arrow'
+    write_to_file(outputpath_arrow, table)
+    return
 
 
 @app.cell
