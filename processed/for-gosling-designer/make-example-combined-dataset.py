@@ -30,6 +30,7 @@ def _(modelFileUrl, pa, requests):
     table = reader.read_all()
 
     print(table)
+    table
     return (table,)
 
 
@@ -43,7 +44,8 @@ def _(table):
 def _(modelDF):
     # modelDF["chr"] = modelDF["chr"].spli
     modelDFprocessed = modelDF.copy()
-    modelDFprocessed[["chr", "patmat"]] = modelDF["chr"].str.extract(r"(\d+)\((\w+)\)")
+    modelDFprocessed["chrOG"] = modelDFprocessed["chr"]
+    modelDFprocessed[["chr", "patmat"]] = modelDF["chr"].str.extract(r"([A-Za-z0-9]+)\((\w+)\)")
     modelDFprocessed["chr"] = "chr" + modelDFprocessed["chr"]
     modelDFprocessed
     return (modelDFprocessed,)
