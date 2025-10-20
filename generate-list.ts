@@ -10,14 +10,16 @@ let content = header;
 const generatedFiles = await Deno.readTextFile(listFileIn);
 
 for (const file of generatedFiles.split("\n")) {
-	if (file === "") {
-		continue;
-	}
-	const arrowURL = `${baseBucketURL}/${file}.arrow`;
-	const parquetURL = `${baseBucketURL}/${file}.parquet`;
-	const chspaceURL = `https://chspace.xyz/?source=${arrowURL}`;
-	const line = `|${file}|[.arrow](${arrowURL}) / [.parquet](${parquetURL})|[open](${chspaceURL})|\n`;
-	content = content + line;
+  if (file === "") {
+    continue;
+  }
+  const arrowURL = `${baseBucketURL}/${file}.arrow`;
+  const parquetURL = `${baseBucketURL}/${file}.parquet`;
+  const csvURL = `${baseBucketURL}/${file}.csv`;
+  const chspaceURL = `https://chspace.xyz/?source=${arrowURL}`;
+  const line =
+    `|${file}|[.arrow](${arrowURL}) / [.parquet](${parquetURL}) / [.csv](${csvURL})|[open](${chspaceURL})|\n`;
+  content = content + line;
 }
 
 await Deno.writeTextFile(outMdPath, content);
