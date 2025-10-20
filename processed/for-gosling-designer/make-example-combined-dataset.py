@@ -46,6 +46,7 @@ def _(modelDF):
     modelDFprocessed = modelDF.copy()
     modelDFprocessed["chrOG"] = modelDFprocessed["chr"]
     modelDFprocessed[["chr", "patmat"]] = modelDF["chr"].str.extract(r"([A-Za-z0-9]+)\((\w+)\)")
+    # modelDFprocessed["chr"] = "\"chr" + modelDFprocessed["chr"] + "\""
     modelDFprocessed["chr"] = "chr" + modelDFprocessed["chr"]
     modelDFprocessed
     return (modelDFprocessed,)
@@ -54,8 +55,29 @@ def _(modelDF):
 @app.cell
 def _(modelDFprocessed, modelFileName):
     # Save as .csv to disk
-    newCsvFileName = f"out/{modelFileName.split(".")[0]}.csv"
+    fileKey = modelFileName.split(".")[0]
+    newCsvFileName = f"out/{fileKey}.csv"
     modelDFprocessed.to_csv(newCsvFileName, index=False)
+
+    # write to outputs array: this will then be used to generate the structures.md table
+    outputs = []
+    outputs.append(f"{fileKey}")
+    return (outputs,)
+
+
+@app.cell
+def _(outputs):
+    outputs
+    return
+
+
+@app.cell
+def _(outputs):
+    # Write list of datasets to out_file.txt
+    outputs_list_file = "out/out_file.txt"
+    with open(outputs_list_file, "w") as outputs_file:
+        for key in outputs:
+            outputs_file.write(f'{key}\n')
     return
 
 

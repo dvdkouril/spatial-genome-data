@@ -26,6 +26,26 @@ jobs:
         run: uv run --with marimo --with pyarrow --with pandas --with requests make-example-combined-dataset.py
         working-directory: ./processed/for-gosling-designer
 
+      - uses: denoland/setup-deno@v2
+        with:
+          deno-version: v2.x
+      - name: List structures in structures.md
+        run: |
+          deno run -A generate-list.ts processed/for-gosling-designer/out/out_file.txt processed/for-gosling-designer/structures.md
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add processed/for-gosling-designer/structures.md
+
+          # Check if there are changes before committing
+          if git diff --staged --quiet; then
+            echo "No changes to commit"
+          else
+            git commit -m "Regenerate list of structures"
+            git push
+          fi
+          # git commit -m "Regenerate list of structures"
+          # git push
+
       - name: Upload files to Cloudflare R2
         run: |
           uv run --with awscli aws s3 cp ./processed/for-gosling-designer/out "s3://${R2_BUCKET_NAME}/" \
