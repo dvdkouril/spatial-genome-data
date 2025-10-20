@@ -80,19 +80,15 @@ def _(pa):
 
 
 @app.cell
-def _(fileKey, pq, table, write_to_file):
+def _(fileKey, modelDFprocessed, pa, pq, write_to_file):
+    processed_table = pa.Table.from_pandas(modelDFprocessed)
+
     # Write also as .parquet and .arrow file: 
     outputpath_parquet = f'out/{fileKey}.parquet'
-    pq.write_table(table, outputpath_parquet, compression=None)
-            
+    pq.write_table(processed_table, outputpath_parquet, compression=None)
+
     outputpath_arrow = f'out/{fileKey}.arrow'
-    write_to_file(outputpath_arrow, table)
-    return
-
-
-@app.cell
-def _(outputs):
-    outputs
+    write_to_file(outputpath_arrow, processed_table)
     return
 
 
