@@ -17,6 +17,7 @@ for (const file of generatedFiles.split("\n")) {
   const parquetURL = `${baseBucketURL}/${file}.parquet`;
   const csvURL = `${baseBucketURL}/${file}.csv`;
   const chspaceURL = `https://chspace.xyz/?source=${arrowURL}`;
+  const quakURL = `https://manzt.github.io/quak/?source=${parquetURL}`;
   const line =
     `|${file}|[.arrow](${arrowURL}) / [.parquet](${parquetURL}) / [.csv](${csvURL})|[open](${chspaceURL})|\n`;
   content = content + line;
