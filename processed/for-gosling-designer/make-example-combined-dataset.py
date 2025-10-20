@@ -44,6 +44,7 @@ def _(modelDF):
     # modelDF["chr"] = modelDF["chr"].spli
     modelDFprocessed = modelDF.copy()
     modelDFprocessed[["chr", "patmat"]] = modelDF["chr"].str.extract(r"(\d+)\((\w+)\)")
+    modelDFprocessed["chr"] = "chr" + modelDFprocessed["chr"]
     modelDFprocessed
     return (modelDFprocessed,)
 
