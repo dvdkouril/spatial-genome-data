@@ -19,6 +19,14 @@ Process:
 - Downloaded `GSE80280_RAW.tar` (19.7 Gb) from the GEO repository.
 - Copied only the cell structures (identified by the `.pdb` file).
 
+Run the notebook for data processing using [juv](https://github.com/manzt/juv). 
+```sh
+cd stevens-2017
+juv run notebook.ipynb
+```
+
+---
+
 TODO:
 - [x] make it a model:
     - [x] store bin chromosomes
