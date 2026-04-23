@@ -12,3 +12,7 @@ tan-2018/out
 stevens-2017/out
 duan-2010/out
 processed/for-gosling-designer/out
+processed/normalized/out
+
+# marimo files
+processed/normalized/__marimo__/*
