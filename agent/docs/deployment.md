@@ -67,9 +67,46 @@ kubectl apply -f agent/hello/deployment.yaml
 kubectl logs -f deploy/hello
 ```
 
-To release a new version: change the code, build and push with a new tag
-(`v2`), update `image:` in the manifest, and `kubectl apply` again. The
-Deployment replaces the running pod.
+### Releasing a new version
+
+1. Change the code and test it locally:
+   ```sh
+   node agent/hello/hello.js
+   ```
+2. Build the image with a **new tag** (`v1` → `v2`):
+   ```sh
+   docker build --platform linux/amd64 -t cerit.io/dvdkouril/hello:v2 agent/hello
+   ```
+3. Push it to Harbor:
+   ```sh
+   docker push cerit.io/dvdkouril/hello:v2
+   ```
+4. Update the tag in `agent/hello/deployment.yaml`:
+   ```yaml
+   image: cerit.io/dvdkouril/hello:v2
+   ```
+5. Apply the changed manifest:
+   ```sh
+   kubectl apply -f agent/hello/deployment.yaml
+   ```
+6. Check the new version is running:
+   ```sh
+   kubectl rollout status deploy/hello   # waits until the new pod is up
+   kubectl logs -f deploy/hello          # output of the new version
+   ```
+7. Commit the code and the manifest together, so git records which version is
+   deployed.
+
+Why a new tag every time: if you push a changed image under the same tag (`v1`),
+nodes that already downloaded `v1` keep using their cached copy, and
+`kubectl apply` sees no change in the manifest, so nothing is redeployed.
+
+If the new version is broken, go back to the previous one:
+```sh
+kubectl rollout undo deploy/hello     # immediate: back to the previous pod template
+```
+Then set `image:` in the manifest back to the old tag, so the file matches
+what's running.
 
 ## CERIT requirements
 
