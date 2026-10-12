@@ -24,7 +24,9 @@ it, and when the search has covered enough.
 
 ## Roadmap
 
-Each increment ends with something that runs.
+Essentially, the stages above each correspond to an agent responsible for the
+tasks in that stage. We will build the whole pipeline incrementally, starting
+with the functionality to search for papers within a topic.
 
 | # | Increment | Done when | Status |
 |---|---|---|---|
