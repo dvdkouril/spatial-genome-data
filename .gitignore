@@ -16,3 +16,6 @@ processed/normalized/out
 
 # marimo files
 processed/normalized/__marimo__/*
+
+# local secrets (API keys etc.)
+.env
