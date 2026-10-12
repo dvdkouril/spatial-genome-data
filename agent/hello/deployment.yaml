@@ -1,0 +1,26 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: hello
+spec:
+  replicas: 1                   # keep exactly one copy running
+  selector:
+    matchLabels: { app: hello } # which pods belong to this Deployment...
+  template:                     # ...and how to create them: the Pod from pod.yaml
+    metadata:
+      labels: { app: hello }    # ...must match the selector above
+    spec:
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 1000
+        seccompProfile: { type: RuntimeDefault }
+      containers:
+        - name: hello
+          image: busybox:1.36
+          command: ["sh", "-c", "while true; do echo hello $(date); sleep 5; done"]
+          resources:
+            requests: { cpu: 10m, memory: 16Mi }
+            limits:   { cpu: 100m, memory: 32Mi }
+          securityContext:
+            allowPrivilegeEscalation: false
+            capabilities: { drop: ["ALL"] }
