@@ -30,7 +30,7 @@ with the functionality to search for papers within a topic.
 
 | # | Increment | Done when | Status |
 |---|---|---|---|
-| 0 | Hello-world container on CERIT, deployed by hand (Harbor, `kubectl`, manifest) | Pod logs show its output | todo |
+| 0 | Hello-world container on CERIT, deployed by hand (Harbor, `kubectl`, manifest) | Pod logs show its output | done |
 | 1 | LLM check: a tiny script calling the LLM API with one fake tool | The model correctly asks for the tool | todo |
 | 2 | Search agent, locally: fixed prompt, `search_papers` + `save_paper`, one round then exit | `papers.jsonl` contains sensible papers | todo |
 | 3 | Deploy the search agent: image in Harbor, CronJob + PersistentVolume + Secret | Runs on schedule; results survive between rounds | todo |

@@ -14,7 +14,8 @@ root.
 
 ## Deploy the hello-world Deployment
 
-`agent/hello/deployment.yaml` runs `busybox` printing the time every 5
+`agent/hello/deployment.yaml` runs `agent/hello/hello.js` (from the image
+`cerit.io/dvdkouril/hello:v1`, see below), printing a greeting every 5
 seconds, kept running by a Deployment.
 
 ```sh
@@ -34,6 +35,41 @@ kubectl delete pod <pod-name>              # the Deployment starts a replacement
 kubectl scale deploy/hello --replicas=3    # run three copies
 kubectl delete -f agent/hello/deployment.yaml   # remove everything
 ```
+
+## Deploy actual code
+
+Test locally first:
+```sh
+node agent/hello/hello.js
+docker build -t hello agent/hello
+docker run --rm -e GREETING_NAME=David hello
+```
+
+Log in to [Harbor](https://hub.cerit.io) (one-time): username and CLI secret
+are in Harbor's User Profile (click your username, upper right).
+```sh
+docker login cerit.io
+```
+
+Build for the cluster and push. The image name is its address:
+registry / project / name : tag.
+```sh
+docker build --platform linux/amd64 -t cerit.io/dvdkouril/hello:v1 agent/hello
+docker push cerit.io/dvdkouril/hello:v1
+```
+`--platform linux/amd64` is needed on Apple Silicon: the cluster runs amd64, an
+arm64 image fails there with `exec format error`.
+
+Point the manifest at the image (`image: cerit.io/dvdkouril/hello:v1`) and
+apply it:
+```sh
+kubectl apply -f agent/hello/deployment.yaml
+kubectl logs -f deploy/hello
+```
+
+To release a new version: change the code, build and push with a new tag
+(`v2`), update `image:` in the manifest, and `kubectl apply` again. The
+Deployment replaces the running pod.
 
 ## CERIT requirements
 
