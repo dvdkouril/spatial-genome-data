@@ -1,9 +1,11 @@
-// Increment 2, step 1: the agent loop, still with one fake tool.
+// Increment 2, step 2: the agent loop with a real search tool (Europe PMC).
 // Talks to the OpenAI-compatible chat completions API directly, with plain fetch,
 // so you can see what an agent library does for you.
 //
 // Settings come from agent/llm-check/.env (git-ignored). Run:
 //   node --env-file=agent/llm-check/.env agent/llm-check/check.js
+
+import { searchPapers } from "./europepmc.js";
 
 const BASE_URL = process.env.LLM_BASE_URL; // your LLM API, ending in /v1
 const MODEL = process.env.LLM_MODEL; // a model id from GET $LLM_BASE_URL/models
@@ -16,10 +18,20 @@ const tools = [
     type: "function",
     function: {
       name: "search_papers",
-      description: "Search for scientific publications. Returns titles and DOIs.",
+      description:
+        "Search Europe PMC (PubMed, PubMed Central, and preprints such as bioRxiv). " +
+        "Returns the 10 best matches with title, authors, year, journal, DOI, and abstract.",
       parameters: {
         type: "object",
-        properties: { query: { type: "string", description: "Search query" } },
+        properties: {
+          query: {
+            type: "string",
+            description:
+              "Europe PMC query. Combine terms with AND / OR, and put phrases in double quotes. " +
+              'Always quote hyphenated terms ("Hi-C", "Dip-C"), or they are split into separate words. ' +
+              "Add AND SRC:PPR to search only preprints.",
+          },
+        },
         required: ["query"],
       },
     },
@@ -43,16 +55,12 @@ async function chat() {
 }
 
 // The code behind each tool, looked up by the name the model asks for.
-// Still fake: every search returns the same two papers.
 const toolImplementations = {
-  search_papers: ({ query }) =>
-    `Results for "${query}":\n` +
-    "- 3D structures of individual mammalian genomes studied by single-cell Hi-C (2017) doi:10.1038/nature21429\n" +
-    "- Three-dimensional genome structures of single diploid human cells (2018) doi:10.1126/science.aat5641",
+  search_papers: ({ query }) => searchPapers(query),
 };
 
 // Run one tool call. Problems are returned as text, so the model can see them and retry.
-function runTool(call) {
+async function runTool(call) {
   const implementation = toolImplementations[call.function.name];
   if (!implementation) return `Error: there is no tool called ${call.function.name}.`;
   let args;
@@ -61,7 +69,11 @@ function runTool(call) {
   } catch {
     return `Error: the arguments are not valid JSON: ${call.function.arguments}`;
   }
-  return implementation(args);
+  try {
+    return await implementation(args);
+  } catch (error) {
+    return `Error: ${call.function.name} failed: ${error.message}`;
+  }
 }
 
 // The agent loop: ask the model, run the tools it asks for, repeat until it answers with text.
@@ -79,7 +91,7 @@ for (let step = 1; step <= MAX_STEPS; step++) {
   // A single reply may contain several tool calls; each gets its own result.
   for (const call of reply.tool_calls) {
     console.log(`Step ${step}: ${call.function.name}(${call.function.arguments})`);
-    messages.push({ role: "tool", tool_call_id: call.id, content: runTool(call) });
+    messages.push({ role: "tool", tool_call_id: call.id, content: await runTool(call) });
   }
 }
 
