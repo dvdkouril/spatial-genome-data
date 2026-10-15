@@ -1,9 +1,44 @@
 # Architecture
 
+This document describes an architecture for an automated literature and dataset
+discovery system.
+
+The benefits of an LLM/AI-based system are in:
+- refining the keywords used in searches; adjusting based on new terms from
+  found works that are decided to be relevant
+- making the decision whether a discovered paper is or isn't relevant, based on
+  title, abstract, full text
+
 ## Goal
 
 Automatically discover published datasets of 3D genome structures (chromatin
 models from physical simulations or single-cell Hi-C reconstructions).
+
+The high-level workflow:
+1. Discover publications and pre-prints relevant to the topic of interested
+2. Examine full-text and supplemental materials of each discovered publication;
+   decide: possibly relevant or not
+3. Search for associated datasets; download
+4. Identify data depicting the target data type (3D genome structures)
+5. Extract, convert, store for visualization
+
+There are two use cases:
+- initial discovery: find out which papers are out there currently;
+  continuously attempt to find new relevant papers that have been missed in
+  past searches
+- new findings: when a new paper is published on the topic, we want a mechanism
+  to discover it easily
+
+## Target topic specification
+
+We are interested in finding papers that employ simulations or predictions of
+DNA folding in cells. We want to focus on data that represent actual 3D
+physical models: models that associate genomic locations with x, y, z
+coordinates in 3D space.
+
+## Key example papers
+- Stevens
+- Tan
 
 ## Pipeline stages
 
@@ -28,20 +63,8 @@ Essentially, the stages above each correspond to an agent responsible for the
 tasks in that stage. We will build the whole pipeline incrementally, starting
 with the functionality to search for papers within a topic.
 
-| # | Increment | Done when | Status |
-|---|---|---|---|
-| 0 | Hello-world container on CERIT, deployed by hand (Harbor, `kubectl`, manifest) | Pod logs show its output | done |
-| 1 | LLM check: a tiny script calling the LLM API with one fake tool | The model correctly asks for the tool | todo |
-| 2 | Search agent, locally: fixed prompt, `search_papers` + `save_paper`, one round then exit | `papers.jsonl` contains sensible papers | todo |
-| 3 | Deploy the search agent: image in Harbor, CronJob + PersistentVolume + Secret | Runs on schedule; results survive between rounds | todo |
-| 4 | Automate the image build (GitHub Actions + Harbor robot account) | A push produces a new image | todo |
-| later | Stages 3–5: examine papers, find data, check downloads | One stage at a time | — |
-| later | Results somewhere visible (GitHub issues or commits) instead of a file | — | — |
-
-## Open decisions
-
-- **Schedule:** daily or weekly? New papers appear slowly.
-- **Results:** `papers.jsonl` on the PersistentVolume to start (read with
-  `kubectl cp`); later GitHub issues, commits, or the R2 bucket?
-- **Model:** which model on the LLM API, and does it handle tool calling and
-  relevance judgment well enough?
+Implementation stages:
+1. simple local agent that fetches Europe PMC and saves the results into a
+   database
+2. deploy the agent on CERIT-SC Kubernetes platform
+3. agent that decides whether a work is relevant or not
