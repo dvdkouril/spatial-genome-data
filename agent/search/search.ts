@@ -1,15 +1,34 @@
-// Increment 2, step 2: the agent loop with a real search tool (Europe PMC).
+// Stage 1 (Search): the agent loop with a real search tool (Europe PMC).
 // Talks to the OpenAI-compatible chat completions API directly, with plain fetch,
 // so you can see what an agent library does for you.
 //
-// Settings come from agent/llm-check/.env (git-ignored). Run:
-//   node --env-file=agent/llm-check/.env agent/llm-check/check.js
+// Settings come from agent/search/.env (git-ignored). Run:
+//   deno task search
 
-import { searchPapers } from "./europepmc.js";
+import { searchPapers } from "./europepmc.ts";
 
-const BASE_URL = process.env.LLM_BASE_URL; // your LLM API, ending in /v1
-const MODEL = process.env.LLM_MODEL; // a model id from GET $LLM_BASE_URL/models
-const API_KEY = process.env.LLM_API_KEY;
+// A required setting from the environment; stop early with a clear message if it's missing.
+function setting(name: string): string {
+  const value = Deno.env.get(name);
+  if (!value) throw new Error(`Missing ${name}; set it in agent/search/.env`);
+  return value;
+}
+
+const BASE_URL = setting("LLM_BASE_URL"); // your LLM API, ending in /v1
+const MODEL = setting("LLM_MODEL"); // a model id from GET $LLM_BASE_URL/models
+const API_KEY = setting("LLM_API_KEY");
+
+// The parts of the chat completions API we use.
+interface ToolCall {
+  id: string;
+  type: "function";
+  function: { name: string; arguments: string }; // arguments is a JSON string
+}
+
+type Message =
+  | { role: "system" | "user"; content: string }
+  | { role: "assistant"; content: string | null; tool_calls?: ToolCall[] }
+  | { role: "tool"; tool_call_id: string; content: string };
 
 // The tool, described to the model as a JSON schema. The model never runs it;
 // it can only ask us to.
@@ -38,12 +57,12 @@ const tools = [
   },
 ];
 
-const messages = [
+const messages: Message[] = [
   { role: "system", content: "You help find publications that contain 3D genome structure data." },
   { role: "user", content: "Find papers with 3D genome structures reconstructed from single-cell Hi-C." },
 ];
 
-async function chat() {
+async function chat(): Promise<Extract<Message, { role: "assistant" }>> {
   const response = await fetch(`${BASE_URL}/chat/completions`, {
     method: "POST",
     headers: { "content-type": "application/json", authorization: `Bearer ${API_KEY}` },
@@ -55,12 +74,13 @@ async function chat() {
 }
 
 // The code behind each tool, looked up by the name the model asks for.
-const toolImplementations = {
-  search_papers: ({ query }) => searchPapers(query),
+// Arguments come from the model, so they are untyped until checked.
+const toolImplementations: Record<string, (args: Record<string, unknown>) => Promise<string>> = {
+  search_papers: ({ query }) => searchPapers(String(query)),
 };
 
 // Run one tool call. Problems are returned as text, so the model can see them and retry.
-async function runTool(call) {
+async function runTool(call: ToolCall): Promise<string> {
   const implementation = toolImplementations[call.function.name];
   if (!implementation) return `Error: there is no tool called ${call.function.name}.`;
   let args;
@@ -72,7 +92,7 @@ async function runTool(call) {
   try {
     return await implementation(args);
   } catch (error) {
-    return `Error: ${call.function.name} failed: ${error.message}`;
+    return `Error: ${call.function.name} failed: ${(error as Error).message}`;
   }
 }
 
@@ -85,7 +105,7 @@ for (let step = 1; step <= MAX_STEPS; step++) {
 
   if (!reply.tool_calls?.length) {
     console.log(`\n=== Step ${step}: final answer ===\n${reply.content}`);
-    process.exit(0);
+    Deno.exit(0);
   }
 
   // A single reply may contain several tool calls; each gets its own result.
@@ -96,4 +116,4 @@ for (let step = 1; step <= MAX_STEPS; step++) {
 }
 
 console.log(`\nStopped after ${MAX_STEPS} steps without a final answer.`);
-process.exit(1);
+Deno.exit(1);
