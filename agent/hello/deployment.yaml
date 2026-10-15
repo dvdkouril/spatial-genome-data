@@ -1,0 +1,28 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: hello
+spec:
+  replicas: 1                   # keep exactly one copy running
+  selector:
+    matchLabels: { app: hello } # which pods belong to this Deployment...
+  template:                     # ...and how to create them
+    metadata:
+      labels: { app: hello }    # ...must match the selector above
+    spec:
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 1000
+        seccompProfile: { type: RuntimeDefault }
+      containers:
+        - name: hello
+          image: cerit.io/dvdkouril/hello:v1
+          env:
+            - name: GREETING_NAME
+              value: "from CERIT"
+          resources:
+            requests: { cpu: 10m, memory: 64Mi }
+            limits:   { cpu: 100m, memory: 128Mi }
+          securityContext:
+            allowPrivilegeEscalation: false
+            capabilities: { drop: ["ALL"] }

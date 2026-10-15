@@ -1,1 +1,6 @@
-{}
+{
+  "tasks": {
+    "search": "deno run --env-file=agent/search/.env --allow-net --allow-env agent/search/search.ts",
+    "europepmc": "deno run --allow-net agent/search/europepmc.ts"
+  }
+}
