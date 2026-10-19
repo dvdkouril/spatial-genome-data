@@ -1,0 +1,10 @@
+{
+  "providers": {
+    "einfra": {
+      "baseUrl": "https://llm.ai.e-infra.cz/v1",
+      "api": "openai-completions",
+      "apiKey": "$LLM_API_KEY",
+      "models": [{ "id": "kimi-k3" }]
+    }
+  }
+}
