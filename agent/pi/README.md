@@ -26,7 +26,7 @@ repo root.
 Once per terminal session:
 ```fish
 set -x PI_CODING_AGENT_DIR (pwd)/agent/pi   # use this folder as Pi's config, not ~/.pi/agent
-set -x LLM_API_KEY (grep '^LLM_API_KEY=' agent/search/.env | cut -d= -f2-)   # key from the existing .env
+set -x LLM_API_KEY (grep '^LLM_API_KEY=' agent/pi/.env | cut -d= -f2-)   # key from agent/pi/.env (git-ignored)
 set -x PAPERS_DB (pwd)/agent/pi/data/papers.db
 set -x PATH (pwd)/agent/pi/bin $PATH        # so the agent finds search.sh and save.sh
 mkdir -p agent/pi/data
