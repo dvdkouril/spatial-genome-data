@@ -31,7 +31,7 @@ Files:
 - `schema.sql`: the `papers` table. `save.sh` creates it if needed.
 - `data/papers.db`: the database (git-ignored).
 - `data/papers.csv`: backup of the database, committed to git.
-- `docs/`: architecture and deployment notes; `hello/`: Kubernetes example.
+- `docs/`: architecture notes.
 
 Both scripts use the database at `$PAPERS_DB`. You can run them yourself too.
 
