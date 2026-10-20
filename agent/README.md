@@ -27,8 +27,10 @@ Files:
   are not in the database yet, in a compact form.
 - `bin/save.sh batch.json`: checks a JSON array of judged papers and inserts
   the new ones.
+- `bin/export.sh`: writes the database to `data/papers.csv`, the backup.
 - `schema.sql`: the `papers` table. `save.sh` creates it if needed.
-- `data/`: local database (git-ignored).
+- `data/papers.db`: the database (git-ignored).
+- `data/papers.csv`: backup of the database, committed to git.
 - `docs/`: architecture and deployment notes; `hello/`: Kubernetes example.
 
 Both scripts use the database at `$PAPERS_DB`. You can run them yourself too.
@@ -67,12 +69,20 @@ This is how it will run on Kubernetes.
 
 ```fish
 sqlite3 $PAPERS_DB "SELECT verdict, count(*) FROM papers GROUP BY verdict"
-sqlite3 -header -csv $PAPERS_DB "SELECT * FROM papers" > papers.csv   # for a spreadsheet
+```
+For a spreadsheet, open `agent/data/papers.csv` after an export (see below).
+
+## Back up and restore
+
+The database lives only in `data/`. After each run, export it to
+`agent/data/papers.csv` (committed, sorted, so the diff shows what the round added)
+and push:
+```fish
+agent/bin/export.sh
+jj commit -m "papers: round YYYY-MM-DD"   # then push
 ```
 
-## One-time import of the old CSV
-
-The first runs wrote `data/papers.csv`. To carry those rows over:
+To rebuild the database from that CSV (e.g. on a new machine):
 ```fish
 sqlite3 $PAPERS_DB < agent/schema.sql
 sqlite3 $PAPERS_DB ".import --csv --skip 1 agent/data/papers.csv papers"
