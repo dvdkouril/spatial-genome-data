@@ -27,7 +27,10 @@ curl -sfG https://www.ebi.ac.uk/europepmc/webservices/rest/search \
       ($new[] |
         "- \(.key) | \(.pubYear) | \(.journalInfo.journal.title // .source)",
         "  \(.title)",
-        "  \((.abstractText // "no abstract") | gsub("<[^>]+>"; " ") | gsub("\\s+"; " ") | .[0:600])",
+        "  Type: \(.pubTypeList.pubType // [] | map(ascii_downcase | select(startswith("research support") | not)) | unique | join(", "))"
+          + ((.tmAccessionTypeList.accessionType // [] | map(select(. != "doi"))) as $acc
+             | if $acc | length > 0 then " | Accession numbers in text: \($acc | join(", "))" else "" end),
+        "  \((.abstractText // "no abstract") | gsub("<[^>]+>"; " ") | gsub("\\s+"; " "))",
         ""),
       (if .nextCursorMark and .nextCursorMark != .request.cursorMark and ($page | length) > 0
        then "Next page: search.sh \($query | @sh) \(.nextCursorMark | @sh)" else "No more pages." end)

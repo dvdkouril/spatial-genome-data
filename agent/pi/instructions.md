@@ -26,7 +26,10 @@ search.sh '"single-cell Hi-C" AND "3D structure"'
 ```
 
 It prints only papers that are **not in the database yet**: id, year, journal,
-title and the start of the abstract, 25 results per page. The first line says
+title, publication type, and the abstract, 25 results per page. If Europe PMC
+found database accession numbers in the article (e.g. `geo`, `gen` for
+GenBank/ENA), they are listed too: a hint that the paper deposited data. A
+publication type of `review` usually means no own data. The first line says
 how many results were already known. The last line gives the command for the
 next page, if there is one.
 
