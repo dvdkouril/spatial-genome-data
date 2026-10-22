@@ -1,0 +1,15 @@
+# The persistent drive for papers.db. Applied once by hand, kept out of the
+# kustomization so deleting the deployment never deletes the data.
+#   kubectl apply -f agent/k8s/setup/pvc.yaml
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: paper-agent-data
+  namespace: kouril1-ns
+spec:
+  accessModes:
+    - ReadWriteMany            # NFS: the helper pod and the job may sit on different nodes
+  storageClassName: nfs-csi    # Retain: the volume survives if this claim is deleted
+  resources:
+    requests:
+      storage: 1Gi
