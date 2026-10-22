@@ -3,7 +3,7 @@ name: Build and deploy agent
 on:
   push:
     branches: [main]
-    paths:
+    paths: # only deploy if the agent code changed, or the workflow itself changed
       - "agent/**"
       - "!agent/data/**"           # committing the CSV backup needs no new image
       - ".github/workflows/deploy-agent.yaml"
