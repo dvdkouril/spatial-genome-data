@@ -1,0 +1,13 @@
+# What the workflow deploys. The PVC (setup/) is deliberately not listed,
+# so `kubectl delete -k` can never remove the data.
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+
+namespace: kouril1-ns
+
+resources:
+  - cronjob.yaml
+
+images:
+  - name: cerit.io/dvdkouril/paper-agent
+    newTag: latest
