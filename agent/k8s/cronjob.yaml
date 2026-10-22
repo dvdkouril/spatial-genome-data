@@ -1,0 +1,57 @@
+# The weekly literature-search round. Image tag is set by the kustomization.
+# Run a round now:  kubectl -n kouril1-ns create job --from=cronjob/paper-agent manual-1
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: paper-agent
+spec:
+  schedule: "0 3 * * 1"            # Mondays 03:00
+  timeZone: Europe/Prague          # otherwise the schedule is in UTC
+  suspend: true                    # no scheduled runs yet; trigger by hand (see above)
+  concurrencyPolicy: Forbid        # never two rounds writing papers.db at once
+  successfulJobsHistoryLimit: 3    # keep the last finished pods, so their logs stay readable
+  failedJobsHistoryLimit: 3
+  jobTemplate:
+    spec:
+      backoffLimit: 0              # a failed round is not retried (costs tokens, may half-repeat)
+      activeDeadlineSeconds: 3600  # kill a round that runs over an hour
+      template:
+        spec:
+          restartPolicy: Never     # Job pods must not restart in place
+          securityContext:
+            runAsNonRoot: true
+            seccompProfile:
+              type: RuntimeDefault
+          containers:
+            - name: agent
+              image: cerit.io/dvdkouril/paper-agent
+              env:
+                - name: LLM_API_KEY
+                  valueFrom:
+                    secretKeyRef:
+                      name: llm-api
+                      key: LLM_API_KEY
+              securityContext:
+                runAsUser: 1000
+                allowPrivilegeEscalation: false
+                capabilities:
+                  drop:
+                    - ALL
+              resources:
+                requests:
+                  cpu: 100m
+                  memory: 256Mi
+                limits:
+                  cpu: "1"
+                  memory: 1Gi
+              volumeMounts:
+                - name: data
+                  mountPath: /data
+                - name: work
+                  mountPath: /work
+          volumes:
+            - name: data
+              persistentVolumeClaim:
+                claimName: paper-agent-data   # created once from setup/pvc.yaml
+            - name: work
+              emptyDir: {}         # fresh empty folder each run, gone afterwards

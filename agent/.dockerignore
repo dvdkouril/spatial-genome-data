@@ -1,0 +1,8 @@
+# Keep secrets and local data out of the build context.
+.env
+auth.json
+models-store.json
+settings.json
+sessions/
+data/
+work/

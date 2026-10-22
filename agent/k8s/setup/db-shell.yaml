@@ -1,0 +1,40 @@
+# Helper pod for getting at the PVC: seed, inspect or pull papers.db.
+#   kubectl apply -f agent/k8s/setup/db-shell.yaml
+#   kubectl -n kouril1-ns cp db-shell:/data/papers.db agent/data/papers.db
+#   kubectl -n kouril1-ns delete pod db-shell
+# Don't use it while a round is running.
+apiVersion: v1
+kind: Pod
+metadata:
+  name: db-shell
+  namespace: kouril1-ns
+spec:
+  activeDeadlineSeconds: 3600  # kills itself after an hour if you forget to delete it
+  securityContext:
+    runAsNonRoot: true
+    seccompProfile:
+      type: RuntimeDefault
+  containers:
+    - name: shell
+      image: alpine:3.20       # tiny, has tar (needed for kubectl cp)
+      command: ["sleep", "3600"]
+      securityContext:
+        runAsUser: 1000
+        allowPrivilegeEscalation: false
+        capabilities:
+          drop:
+            - ALL
+      resources:
+        requests:
+          cpu: 10m
+          memory: 16Mi
+        limits:
+          cpu: 100m
+          memory: 64Mi
+      volumeMounts:
+        - name: data
+          mountPath: /data
+  volumes:
+    - name: data
+      persistentVolumeClaim:
+        claimName: paper-agent-data
