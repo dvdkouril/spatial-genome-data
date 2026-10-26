@@ -1,0 +1,111 @@
+name: Collect agent results
+
+on:
+  schedule:
+    - cron: "0 5 * * 1"            # Mondays 05:00 UTC = 06:00 Prague (07:00 in summer)
+  workflow_dispatch:
+
+concurrency:
+  group: agent-results
+  cancel-in-progress: false
+
+permissions:
+  contents: write                  # push the agent/papers-update branch
+  pull-requests: write             # open/update the PR, comment on it
+
+env:
+  NS: kouril1-ns
+
+jobs:
+  collect:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Configure kubectl
+        env:
+          KUBECONFIG_DATA: ${{ secrets.KUBECONFIG }}
+        run: |
+          mkdir -p ~/.kube
+          printf '%s' "$KUBECONFIG_DATA" > ~/.kube/config
+          chmod 600 ~/.kube/config
+
+      # All Jobs of the CronJob, scheduled and manual, as JSON for the next steps.
+      - name: List rounds
+        run: |
+          kubectl get jobs -n "$NS" -o json \
+            | jq '[.items[] | select(any(.metadata.ownerReferences[]?; .name == "paper-agent"))]
+                  | sort_by(.status.startTime)' > "$RUNNER_TEMP/jobs.json"
+
+      - name: Fail if a round is running
+        run: |
+          running=$(jq -r '.[] | select((.status.active // 0) > 0) | .metadata.name' "$RUNNER_TEMP/jobs.json")
+          if [[ -n $running ]]; then
+            echo "::error::Round $running is still running, try again later."
+            exit 1
+          fi
+
+      - name: Clear leftover db-shell
+        run: |
+          phase=$(kubectl get pod db-shell -n "$NS" -o jsonpath='{.status.phase}' --ignore-not-found)
+          if [[ $phase == Running || $phase == Pending ]]; then
+            echo "::error::db-shell is in use, try again later."
+            exit 1
+          fi
+          kubectl delete pod db-shell -n "$NS" --ignore-not-found --wait
+
+      - name: Copy the database out
+        id: copy
+        run: |
+          echo "created=true" >> "$GITHUB_OUTPUT"
+          kubectl apply -f agent/k8s/setup/db-shell.yaml
+          kubectl wait pod/db-shell -n "$NS" --for=condition=Ready --timeout=180s
+          kubectl cp -n "$NS" db-shell:/data/papers.db agent/data/papers.db
+
+      # Only removes the pod this run created, never your own session.
+      - name: Delete db-shell
+        if: always() && steps.copy.outputs.created == 'true'
+        run: kubectl delete pod db-shell -n "$NS" --ignore-not-found
+
+      - name: Export to CSV
+        run: PAPERS_DB=agent/data/papers.db agent/bin/export.sh
+
+      - name: Write PR description
+        run: |
+          latest=$(jq -r 'last | .metadata.name // empty' "$RUNNER_TEMP/jobs.json")
+          {
+            echo "## Latest round: $latest"
+            echo
+            kubectl logs -n "$NS" "job/$latest" 2>/dev/null || echo "(log not available)"
+          } > "$RUNNER_TEMP/summary.md"
+          {
+            echo "| Round | Kind | Started (UTC) | Minutes | Result |"
+            echo "|---|---|---|---|---|"
+            jq -r '.[] |
+              [ .metadata.name,
+                (if .metadata.annotations["cronjob.kubernetes.io/instantiate"] == "manual" then "manual" else "scheduled" end),
+                .status.startTime,
+                (if .status.completionTime then
+                   (((.status.completionTime | fromdateiso8601) - (.status.startTime | fromdateiso8601)) / 60 | floor | tostring)
+                 else "" end),
+                (if (.status.succeeded // 0) > 0 then "✅" elif (.status.failed // 0) > 0 then "❌" else "⏳" end)
+              ] | "| " + join(" | ") + " |"' "$RUNNER_TEMP/jobs.json"
+            echo
+            cat "$RUNNER_TEMP/summary.md"
+          } > "$RUNNER_TEMP/body.md"
+
+      - name: Open or update PR
+        id: pr
+        uses: peter-evans/create-pull-request@v7
+        with:
+          branch: agent/papers-update
+          title: "Paper agent: new search results"
+          body-path: ${{ runner.temp }}/body.md
+          commit-message: "papers: results from the paper agent"
+          add-paths: agent/data/papers.csv
+
+      - name: Comment the round's summary
+        if: steps.pr.outputs.pull-request-operation == 'updated'
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: gh pr comment "${{ steps.pr.outputs.pull-request-number }}" --body-file "$RUNNER_TEMP/summary.md"
