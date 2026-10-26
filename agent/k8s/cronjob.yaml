@@ -7,7 +7,7 @@ metadata:
 spec:
   schedule: "0 3 * * 1"            # Mondays 03:00
   timeZone: Europe/Prague          # otherwise the schedule is in UTC
-  suspend: true                    # no scheduled runs yet; trigger by hand (see above)
+  suspend: false                   # true pauses the schedule; manual runs (see above) still work
   concurrencyPolicy: Forbid        # never two rounds writing papers.db at once
   successfulJobsHistoryLimit: 3    # keep the last finished pods, so their logs stay readable
   failedJobsHistoryLimit: 3
