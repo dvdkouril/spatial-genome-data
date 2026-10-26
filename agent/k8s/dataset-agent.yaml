@@ -1,0 +1,61 @@
+# The dataset agent: daily pass that explores every new relevant paper for data
+# links (bin/explore.sh). Same image as the search agent; image tag is set by
+# the kustomization.
+# Run a pass now:  kubectl -n kouril1-ns create job --from=cronjob/dataset-agent manual-explore-1
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: dataset-agent
+spec:
+  schedule: "30 4 * * *"           # daily 04:30, after Monday's search round (03:00, at most an hour)
+  timeZone: Europe/Prague          # otherwise the schedule is in UTC
+  concurrencyPolicy: Forbid        # a long pass (the first one) makes later ticks skip, not overlap
+  successfulJobsHistoryLimit: 3    # keep the last finished pods, so their logs stay readable
+  failedJobsHistoryLimit: 3
+  jobTemplate:
+    spec:
+      backoffLimit: 0              # a failed pass is not retried; the next day's pass continues
+      activeDeadlineSeconds: 86400 # safety net; each paper also has its own time limit
+      template:
+        spec:
+          restartPolicy: Never     # Job pods must not restart in place
+          securityContext:
+            runAsNonRoot: true
+            seccompProfile:
+              type: RuntimeDefault
+          containers:
+            - name: agent
+              image: cerit.io/dvdkouril/paper-agent
+              args: ["explore.sh"]   # replaces the image's CMD (the search round)
+              env:
+                - name: LLM_API_KEY
+                  valueFrom:
+                    secretKeyRef:
+                      name: llm-api
+                      key: LLM_API_KEY
+                - name: PAPER_TIMEOUT
+                  value: 15m
+              securityContext:
+                runAsUser: 1000
+                allowPrivilegeEscalation: false
+                capabilities:
+                  drop:
+                    - ALL
+              resources:
+                requests:
+                  cpu: 100m
+                  memory: 256Mi
+                limits:
+                  cpu: "1"
+                  memory: 1Gi
+              volumeMounts:
+                - name: data
+                  mountPath: /data
+                - name: work
+                  mountPath: /work
+          volumes:
+            - name: data
+              persistentVolumeClaim:
+                claimName: paper-agent-data   # created once from setup/pvc.yaml
+            - name: work
+              emptyDir: {}         # fresh empty folder each pass, gone afterwards
