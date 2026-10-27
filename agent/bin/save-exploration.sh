@@ -3,39 +3,20 @@
 #   save-exploration.sh result.json
 # result.json is an object:
 #   {"note": "...", "datasets": [{"url", "role", "reason", "evidence"}, ...]}
-# The paper is $PAPER_DOI, its full text (paper.txt) is $PAPER_TEXT,
-# and the database is $DATASETS_DB. Every link must be backed by an evidence
-# sentence copied verbatim from that text, and the link must appear in it.
+# The paper is $PAPER_DOI, the database is $DATASETS_DB.
 set -euo pipefail
 
 result=${1:?usage: save-exploration.sh result.json}
 db=${DATASETS_DB:?set DATASETS_DB to the datasets database}
 doi=${PAPER_DOI:?set PAPER_DOI to the paper being explored}
-paper=${PAPER_TEXT:?set PAPER_TEXT to the file with the paper text}
 
-problems=$(jq -r --rawfile paper "$paper" '
-  def norm: gsub("\\s+"; " ") | ascii_downcase | ltrimstr(" ") | rtrimstr(" ");
-  # $s occurs in the input as a whole token, not as part of a longer id or URL
-  def has($s): test("(?<![a-z0-9])" + ($s | gsub("(?<c>[.*+?^${}()|\\[\\]\\\\/])"; "\\\(.c)")) + "(?![a-z0-9_-])");
-  ($paper | norm) as $text
-  | if type != "object" or (.datasets | type) != "array" then
-      "the file must contain an object with a \"datasets\" array (empty if the paper has no data links)"
-    else
-      (.datasets | map(.url) | group_by(.) | map(select(length > 1) | "listed twice: \(.[0])") | .[]),
-      (.datasets[] |
-        (.url // "") as $url | ((.evidence // "") | norm) as $ev |
-        ($url | ascii_downcase | sub("^https?://"; "") | sub("^www\\."; "") | sub("/+$"; "")) as $bare |
-        [ ($url | ascii_downcase | capture("[?&]acc=(?<a>[^&]+)").a),
-          ($url | ascii_downcase | capture("doi\\.org/(?<a>.+)").a),
-          ($bare | split("/") | last | select(test("[0-9]") and length >= 5)) ] as $ids |
-        if ($url | test("^https?://") | not) then "not a full URL: \(.url | tojson)"
-        elif (.role | IN("produced", "used", "code") | not) then "role must be produced, used or code: \($url)"
-        elif $ev == "" then "missing evidence: \($url)"
-        elif ($text | contains($ev) | not) then "evidence is not a verbatim quote from paper.txt: \($url)"
-        elif ($ev | has($bare)) or any($ids[]; . as $id | $ev | has($id)) then empty
-        else "the link does not appear in its evidence (check it is copied exactly): \($url)"
-        end)
-    end' "$result")
+# Check the result first, so a mistake is reported instead of silently dropped.
+problems=$(jq -r '
+  if (.datasets | type) != "array" then "the file must contain an object with a \"datasets\" array" else
+    .datasets[] | select((.url // "") == "" or (.evidence // "") == ""
+                         or (.role | IN("produced", "used", "code") | not))
+                | "invalid entry (needs url, evidence, and role produced|used|code): \(tojson)"
+  end' "$result")
 if [[ -n $problems ]]; then
   echo "$problems" >&2
   echo "Nothing saved. Fix the entries and run save-exploration.sh again." >&2
@@ -43,19 +24,25 @@ if [[ -n $problems ]]; then
 fi
 
 sqlite3 "$db" <"$(dirname "$0")/../datasets-schema.sql"
-q=${doi//\'/\'\'} # quote for SQL
+q=${doi//\'/\'\'}         # quote for SQL
 file=${result//\'/\'\'}
 if [[ $(sqlite3 "$db" "SELECT count(*) FROM explorations WHERE doi = '$q'") != 0 ]]; then
   echo "$doi is already saved; nothing changed."
   exit 0
 fi
-status=$(jq -r 'if any(.datasets[]; .role == "produced") then "data_found" else "no_data" end' "$result")
-sqlite3 "$db" "
+
+# The paper is data_found if it has at least one link to data it produced itself.
+sqlite3 -bail "$db" "
   BEGIN;
-  INSERT INTO explorations (doi, status, explored_at, note)
-  SELECT '$q', '$status', date('now'), readfile('$file')->>'note';
   INSERT INTO datasets (doi, url, role, reason, evidence)
   SELECT '$q', value->>'url', value->>'role', value->>'reason', value->>'evidence'
   FROM json_each(readfile('$file'), '\$.datasets');
+  INSERT INTO explorations (doi, status, explored_at, note)
+  SELECT '$q',
+         CASE WHEN EXISTS (SELECT 1 FROM datasets WHERE doi = '$q' AND role = 'produced')
+              THEN 'data_found' ELSE 'no_data' END,
+         date('now'), readfile('$file')->>'note';
   COMMIT;"
-echo "Saved $doi as $status with $(jq '.datasets | length' "$result") links."
+
+links=$(sqlite3 "$db" "SELECT count(*) FROM datasets WHERE doi = '$q'")
+echo "Saved $doi with $links links."

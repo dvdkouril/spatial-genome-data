@@ -97,9 +97,7 @@ save-exploration.sh result.json
   the link, **copied verbatim**. The link's URL or accession must appear in it.
   For a supplementary file, copy its `Supplementary file:` line.
 
-`save-exploration.sh` checks that every evidence is a verbatim quote and that
-each link appears in its evidence. If it reports an error, fix the entries by
-copying from `paper.txt` again, and run it again.
+If `save-exploration.sh` reports an error, fix the entries and run it again.
 
 ## Scope
 

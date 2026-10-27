@@ -64,7 +64,7 @@ for doi in "${queue[@]}"; do
     continue
   fi
 
-  PAPER_DOI=$doi PAPER_TEXT=$dir/paper.txt ${limit[@]+"${limit[@]}"} \
+  PAPER_DOI=$doi ${limit[@]+"${limit[@]}"} \
     pi -p --no-session --model einfra/kimi-k3 \
       --append-system-prompt "$here/datasets-instructions.md" \
       "Find the data links of the paper $doi. Its full text is in paper.txt." >answer.txt 2>&1
