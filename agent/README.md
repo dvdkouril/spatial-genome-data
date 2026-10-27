@@ -20,12 +20,12 @@ saves its verdicts with `bin/save.sh` into a SQLite database of papers.
 
 A second agent, the dataset agent, finds the data links of the relevant
 papers. `bin/explore.sh` takes every relevant or maybe paper it has not looked
-at yet and, one paper at a time, fetches the parts of its open-access full text
-that can point to data (`bin/fulltext.sh`) and starts a fresh Pi conversation
-with `datasets-instructions.md`. The model lists each link with its role
-(`produced`, `used` or `code`) and the sentence it comes from, and saves them
-with `bin/save-exploration.sh`, which rejects links that are not quoted
-verbatim from the paper. The dataset agent only reads `papers.db`; it writes its
+at yet and, one paper at a time, saves its open-access full text as
+`paper.txt` (`bin/fulltext.sh`) and starts a fresh Pi conversation with
+`datasets-instructions.md`. The model searches and reads `paper.txt`, lists
+each link with its role (`produced`, `used` or `code`) and the sentence it
+comes from, and saves them with `bin/save-exploration.sh`, which rejects links
+that are not quoted verbatim from the paper. The dataset agent only reads `papers.db`; it writes its
 own `datasets.db`.
 
 Files:
@@ -49,10 +49,12 @@ Dataset agent:
   (at most `max`). Papers without open-access full text are recorded as
   `no_fulltext` without calling the model; papers the model fails on (or that
   exceed `$PAPER_TIMEOUT`, default 15m) as `failed`. Neither is retried
-  automatically: delete their rows to retry them.
-- `bin/fulltext.sh <id>`: prints a paper's availability statements,
-  supplementary files (as URLs), other sentences mentioning data, and data
-  references, from Europe PMC's full-text XML (via `bin/jats-extract.py`).
+  automatically: delete their rows to retry them. Papers whose full text
+  could not be fetched (Europe PMC down) are skipped and stay in the queue.
+- `bin/fulltext.sh <id>`: prints a paper's whole open-access full text from
+  Europe PMC as plain text (converted from XML by `bin/jats-to-text.py`:
+  headings, one line per paragraph, link targets and supplementary file URLs
+  written out).
 - `bin/save-exploration.sh result.json`: checks and saves one paper's links.
 - `bin/export-datasets.sh`: writes `data/explorations.csv` and
   `data/datasets.csv`, the backups.

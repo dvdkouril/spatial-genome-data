@@ -50,24 +50,24 @@ for doi in "${queue[@]}"; do
   dir=$work/paper-$n
   rm -rf "$dir" && mkdir -p "$dir" && cd "$dir" || exit 1
 
-  fulltext.sh "$doi" >paper.md 2>error.txt
+  fulltext.sh "$doi" >paper.txt 2>error.txt
   code=$?
   if [[ $code == 3 ]]; then
     record "$doi" no_fulltext "No open-access full text in Europe PMC."
     echo "[$n/${#queue[@]}] $doi: no_fulltext"
+    cd "$work" && rm -rf "$dir"
     continue
   elif [[ $code != 0 ]]; then
-    record "$doi" failed "fulltext.sh failed: $(tail -1 error.txt)"
-    echo "[$n/${#queue[@]}] $doi: failed (fulltext.sh: $(tail -1 error.txt))"
+    # Europe PMC unreachable: not the paper's fault, so it stays in the queue for the next pass.
+    echo "[$n/${#queue[@]}] $doi: skipped, retried next pass (fulltext.sh: $(tail -1 error.txt))"
+    cd "$work" && rm -rf "$dir"
     continue
   fi
 
-  PAPER_DOI=$doi PAPER_TEXT=$dir/paper.md ${limit[@]+"${limit[@]}"} \
+  PAPER_DOI=$doi PAPER_TEXT=$dir/paper.txt ${limit[@]+"${limit[@]}"} \
     pi -p --no-session --model einfra/kimi-k3 \
       --append-system-prompt "$here/datasets-instructions.md" \
-      "Find the data links of the paper $doi. Its text follows.
-
-$(cat paper.md)" >answer.txt 2>&1
+      "Find the data links of the paper $doi. Its full text is in paper.txt." >answer.txt 2>&1
   code=$?
 
   q=${doi//\'/\'\'}

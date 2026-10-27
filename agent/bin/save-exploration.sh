@@ -3,7 +3,7 @@
 #   save-exploration.sh result.json
 # result.json is an object:
 #   {"note": "...", "datasets": [{"url", "role", "reason", "evidence"}, ...]}
-# The paper is $PAPER_DOI, its text (as shown to the agent) is in $PAPER_TEXT,
+# The paper is $PAPER_DOI, its full text (paper.txt) is $PAPER_TEXT,
 # and the database is $DATASETS_DB. Every link must be backed by an evidence
 # sentence copied verbatim from that text, and the link must appear in it.
 set -euo pipefail
@@ -31,7 +31,7 @@ problems=$(jq -r --rawfile paper "$paper" '
         if ($url | test("^https?://") | not) then "not a full URL: \(.url | tojson)"
         elif (.role | IN("produced", "used", "code") | not) then "role must be produced, used or code: \($url)"
         elif $ev == "" then "missing evidence: \($url)"
-        elif ($text | contains($ev) | not) then "evidence is not a verbatim quote from the paper text: \($url)"
+        elif ($text | contains($ev) | not) then "evidence is not a verbatim quote from paper.txt: \($url)"
         elif ($ev | has($bare)) or any($ids[]; . as $id | $ev | has($id)) then empty
         else "the link does not appear in its evidence (check it is copied exactly): \($url)"
         end)
