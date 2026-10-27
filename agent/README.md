@@ -18,16 +18,6 @@ A plain [Pi](https://pi.dev) install does the literature search. It gets its
 task from `instructions.md`, searches Europe PMC with `bin/search.sh`, and
 saves its verdicts with `bin/save.sh` into a SQLite database of papers.
 
-A second agent, the dataset agent, finds the data links of the relevant
-papers. `bin/explore.sh` takes every relevant or maybe paper it has not looked
-at yet and, one paper at a time, saves its open-access full text as
-`paper.txt` (`bin/fulltext.sh`) and starts a fresh Pi conversation with
-`datasets-instructions.md`. The model searches and reads `paper.txt`, lists
-each link with its role (`produced`, `used` or `code`) and the sentence it
-comes from, and saves them with `bin/save-exploration.sh`, which rejects links
-that are not quoted verbatim from the paper. The dataset agent only reads `papers.db`; it writes its
-own `datasets.db`.
-
 Files:
 - `models.json`: the e-INFRA LLM provider (`kimi-k3`). The API key is read
   from the `LLM_API_KEY` environment variable, so the file holds no secret.
@@ -41,24 +31,6 @@ Files:
 - `schema.sql`: the `papers` table. `save.sh` creates it if needed.
 - `data/papers.db`: the database (git-ignored).
 - `data/papers.csv`: backup of the database, committed to git.
-
-Dataset agent:
-- `datasets-instructions.md`: what counts as a data link, the roles, how to
-  write links as URLs and how to save. Change the agent's behavior here.
-- `bin/explore.sh [max]`: one pass over all unexplored relevant/maybe papers
-  (at most `max`). Papers without open-access full text are recorded as
-  `no_fulltext` without calling the model; papers the model fails on (or that
-  exceed `$PAPER_TIMEOUT`, default 15m) as `failed`. Neither is retried
-  automatically: delete their rows to retry them. Papers whose full text
-  could not be fetched (Europe PMC down) are skipped and stay in the queue.
-- `bin/fulltext.sh <id>`: prints a paper's whole open-access full text from
-  Europe PMC as plain text (converted from XML by `bin/jats-to-text.py`:
-  headings, one line per paragraph, link targets and supplementary file URLs
-  written out).
-- `bin/save-exploration.sh result.json`: checks and saves one paper's links.
-- `datasets-schema.sql`: the `explorations` table (one row per paper looked
-  at) and the `datasets` table (its links).
-- `data/datasets.db`: the database at `$DATASETS_DB` (git-ignored).
 - `docs/`: architecture notes.
 
 Both scripts use the database at `$PAPERS_DB`. You can run them yourself too.
@@ -93,21 +65,10 @@ cd -
 Add `-p` to run it unattended: it prints only the final summary and exits.
 This is how it will run on Kubernetes.
 
-Run the dataset agent on, say, the next 3 papers (needs `python3` too, and
-`timeout` from coreutils for the per-paper limit):
-```fish
-set -x DATASETS_DB (pwd)/agent/data/datasets.db
-rm -rf agent/work; mkdir agent/work; cd agent/work
-explore.sh 3
-cd -
-```
-
 ## Look at the results
 
 ```fish
 sqlite3 $PAPERS_DB "SELECT verdict, count(*) FROM papers GROUP BY verdict"
-sqlite3 $DATASETS_DB "SELECT status, count(*) FROM explorations GROUP BY status"
-sqlite3 $DATASETS_DB "SELECT doi, url FROM datasets WHERE role = 'produced'"
 ```
 For a spreadsheet, open `agent/data/papers.csv` after an export (see below).
 
