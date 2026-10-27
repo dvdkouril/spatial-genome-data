@@ -2,7 +2,7 @@
 #   docker build --platform linux/amd64 -t paper-agent agent
 FROM node:24-bookworm-slim
 
-# Tools used by the scripts in bin/ (python3 for jats-extract.py).
+# Tools used by the scripts in bin/
 RUN apt-get update \
  && apt-get install -y --no-install-recommends ca-certificates curl jq sqlite3 python3 \
  && rm -rf /var/lib/apt/lists/*
