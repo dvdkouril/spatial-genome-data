@@ -56,8 +56,6 @@ Dataset agent:
   headings, one line per paragraph, link targets and supplementary file URLs
   written out).
 - `bin/save-exploration.sh result.json`: checks and saves one paper's links.
-- `bin/export-datasets.sh`: writes `data/explorations.csv` and
-  `data/datasets.csv`, the backups.
 - `datasets-schema.sql`: the `explorations` table (one row per paper looked
   at) and the `datasets` table (its links).
 - `data/datasets.db`: the database at `$DATASETS_DB` (git-ignored).

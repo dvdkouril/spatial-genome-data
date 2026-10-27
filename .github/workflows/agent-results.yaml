@@ -30,12 +30,11 @@ jobs:
           printf '%s' "$KUBECONFIG_DATA" > ~/.kube/config
           chmod 600 ~/.kube/config
 
-      # All Jobs of both agents' CronJobs, scheduled and manual, as JSON for the next steps.
+      # All Jobs of the CronJob, scheduled and manual, as JSON for the next steps.
       - name: List rounds
         run: |
           kubectl get jobs -n "$NS" -o json \
-            | jq '[.items[] | (.metadata.ownerReferences[]? | select(.kind == "CronJob") | .name) as $agent
-                   | select($agent == "paper-agent" or $agent == "dataset-agent") | . + {agent: $agent}]
+            | jq '[.items[] | select(any(.metadata.ownerReferences[]?; .name == "paper-agent"))]
                   | sort_by(.status.startTime)' > "$RUNNER_TEMP/jobs.json"
 
       - name: Fail if a round is running
@@ -62,9 +61,6 @@ jobs:
           kubectl apply -f agent/k8s/setup/db-shell.yaml
           kubectl wait pod/db-shell -n "$NS" --for=condition=Ready --timeout=180s
           kubectl cp -n "$NS" db-shell:/data/papers.db agent/data/papers.db
-          if kubectl exec -n "$NS" db-shell -- test -f /data/datasets.db; then
-            kubectl cp -n "$NS" db-shell:/data/datasets.db agent/data/datasets.db
-          fi
 
       # Only removes the pod this run created, never your own session.
       - name: Delete db-shell
@@ -72,28 +68,21 @@ jobs:
         run: kubectl delete pod db-shell -n "$NS" --ignore-not-found
 
       - name: Export to CSV
-        run: |
-          PAPERS_DB=agent/data/papers.db agent/bin/export.sh
-          if [[ -f agent/data/datasets.db ]]; then
-            DATASETS_DB=agent/data/datasets.db agent/bin/export-datasets.sh
-          fi
+        run: PAPERS_DB=agent/data/papers.db agent/bin/export.sh
 
       - name: Write PR description
         run: |
-          for agent in paper-agent dataset-agent; do
-            latest=$(jq -r --arg a "$agent" 'map(select(.agent == $a)) | last | .metadata.name // empty' "$RUNNER_TEMP/jobs.json")
-            [[ -n $latest ]] || continue
-            echo "## Latest $agent run: $latest"
-            echo
-            kubectl logs -n "$NS" "job/$latest" --tail=60 2>/dev/null || echo "(log not available)"
-            echo
-          done > "$RUNNER_TEMP/summary.md"
+          latest=$(jq -r 'last | .metadata.name // empty' "$RUNNER_TEMP/jobs.json")
           {
-            echo "| Agent | Run | Kind | Started (UTC) | Minutes | Result |"
-            echo "|---|---|---|---|---|---|"
+            echo "## Latest round: $latest"
+            echo
+            kubectl logs -n "$NS" "job/$latest" 2>/dev/null || echo "(log not available)"
+          } > "$RUNNER_TEMP/summary.md"
+          {
+            echo "| Round | Kind | Started (UTC) | Minutes | Result |"
+            echo "|---|---|---|---|---|"
             jq -r '.[] |
-              [ .agent,
-                .metadata.name,
+              [ .metadata.name,
                 (if .metadata.annotations["cronjob.kubernetes.io/instantiate"] == "manual" then "manual" else "scheduled" end),
                 .status.startTime,
                 (if .status.completionTime then
@@ -113,7 +102,7 @@ jobs:
           title: "Paper agent: new search results"
           body-path: ${{ runner.temp }}/body.md
           commit-message: "papers: results from the paper agent"
-          add-paths: agent/data/*.csv
+          add-paths: agent/data/papers.csv
 
       - name: Comment the round's summary
         if: steps.pr.outputs.pull-request-operation == 'updated'
