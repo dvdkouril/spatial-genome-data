@@ -3,6 +3,8 @@
 #   save-exploration.sh result.json
 # result.json is an object:
 #   {"note": "...", "datasets": [{"url", "role", "reason", "evidence"}, ...]}
+# or, for a paper whose full text could not be found:
+#   {"note": "...", "no_fulltext": true, "datasets": []}
 # The paper is $PAPER_DOI, the database is $DATASETS_DB.
 set -euo pipefail
 
@@ -39,7 +41,8 @@ sqlite3 -bail "$db" "
   FROM json_each(readfile('$file'), '\$.datasets');
   INSERT INTO explorations (doi, status, explored_at, note)
   SELECT '$q',
-         CASE WHEN EXISTS (SELECT 1 FROM datasets WHERE doi = '$q' AND role = 'produced')
+         CASE WHEN readfile('$file')->>'no_fulltext' THEN 'no_fulltext'
+              WHEN EXISTS (SELECT 1 FROM datasets WHERE doi = '$q' AND role = 'produced')
               THEN 'data_found' ELSE 'no_data' END,
          date('now'), readfile('$file')->>'note';
   COMMIT;"
