@@ -12,6 +12,16 @@ Ultimate goals / ideas:
 - interactive database / explorer for available datasets:
     - zoomable scatterplot of some form of embedding
 
+<div align="center">
+  
+|file|R2 URL|quak|
+|---|---|---|
+| papers.csv | https://pub-af0e26b4990647828ce49fa2a4961a70.r2.dev/papers.csv | [open](https://manzt.github.io/quak/?source=https://pub-af0e26b4990647828ce49fa2a4961a70.r2.dev/papers.csv) |
+| datasets.csv | https://pub-af0e26b4990647828ce49fa2a4961a70.r2.dev/datasets.csv | [open](https://manzt.github.io/quak/?source=https://pub-af0e26b4990647828ce49fa2a4961a70.r2.dev/datasets.csv) |
+| explorations.csv | https://pub-af0e26b4990647828ce49fa2a4961a70.r2.dev/explorations.csv | [open](https://manzt.github.io/quak/?source=https://pub-af0e26b4990647828ce49fa2a4961a70.r2.dev/explorations.csv) |
+
+</div>
+
 ## How it works
 
 A plain [Pi](https://pi.dev) install does the literature search. It gets its
