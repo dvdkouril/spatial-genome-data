@@ -14,11 +14,11 @@ Ultimate goals / ideas:
 
 <div align="center">
   
-|file|R2 URL|quak|
-|---|---|---|
-| papers.csv | https://pub-af0e26b4990647828ce49fa2a4961a70.r2.dev/papers.csv | [open](https://manzt.github.io/quak/?source=https://pub-af0e26b4990647828ce49fa2a4961a70.r2.dev/papers.csv) |
-| datasets.csv | https://pub-af0e26b4990647828ce49fa2a4961a70.r2.dev/datasets.csv | [open](https://manzt.github.io/quak/?source=https://pub-af0e26b4990647828ce49fa2a4961a70.r2.dev/datasets.csv) |
-| explorations.csv | https://pub-af0e26b4990647828ce49fa2a4961a70.r2.dev/explorations.csv | [open](https://manzt.github.io/quak/?source=https://pub-af0e26b4990647828ce49fa2a4961a70.r2.dev/explorations.csv) |
+|file|contents|R2 URL|quak|
+|---|---|---|---|
+| papers.csv | Every paper the search agent judged, with its verdict (relevant / maybe / irrelevant) and a one-sentence reason | https://pub-af0e26b4990647828ce49fa2a4961a70.r2.dev/papers.csv | [open](https://manzt.github.io/quak/?source=https://pub-af0e26b4990647828ce49fa2a4961a70.r2.dev/papers.csv) |
+| explorations.csv | Every relevant or maybe paper the dataset agent looked at, with the outcome (data_found / no_data / no_fulltext / failed) | https://pub-af0e26b4990647828ce49fa2a4961a70.r2.dev/explorations.csv | [open](https://manzt.github.io/quak/?source=https://pub-af0e26b4990647828ce49fa2a4961a70.r2.dev/explorations.csv) |
+| datasets.csv | Data and code links found in the papers' full texts, one per row, with role (produced / used / code) and the sentence they come from | https://pub-af0e26b4990647828ce49fa2a4961a70.r2.dev/datasets.csv | [open](https://manzt.github.io/quak/?source=https://pub-af0e26b4990647828ce49fa2a4961a70.r2.dev/datasets.csv) |
 
 </div>
 
