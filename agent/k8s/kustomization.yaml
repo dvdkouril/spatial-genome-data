@@ -14,8 +14,8 @@ resources:
 configMapGenerator:
   - name: r2-bucket
     literals:
-      - R2_ENDPOINT=https://TODO-ACCOUNT-ID.r2.cloudflarestorage.com
-      - R2_BUCKET=TODO-BUCKET
+      - R2_ENDPOINT=https://b7b20d00d32c93be320b083b160c47b7.r2.cloudflarestorage.com
+      - R2_BUCKET=spatial-genome-agent
       - AWS_DEFAULT_REGION=auto
 
 images:
