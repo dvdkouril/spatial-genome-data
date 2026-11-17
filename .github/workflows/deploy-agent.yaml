@@ -55,6 +55,18 @@ jobs:
             --from-literal=LLM_API_KEY="$LLM_API_KEY" \
             --dry-run=client -o yaml | kubectl apply -f -
 
+      # The R2 API token publish.sh uploads the CSV exports with: the agents'
+      # own token, for their own bucket (not the R2_* one of the data workflows).
+      - name: Update R2 API token secret
+        env:
+          AWS_ACCESS_KEY_ID: ${{ secrets.AGENT_R2_ACCESS_KEY_ID }}
+          AWS_SECRET_ACCESS_KEY: ${{ secrets.AGENT_R2_SECRET_ACCESS_KEY }}
+        run: |
+          kubectl create secret generic r2-api -n kouril1-ns \
+            --from-literal=AWS_ACCESS_KEY_ID="$AWS_ACCESS_KEY_ID" \
+            --from-literal=AWS_SECRET_ACCESS_KEY="$AWS_SECRET_ACCESS_KEY" \
+            --dry-run=client -o yaml | kubectl apply -f -
+
       # Only updates the CronJob; the new image is used from the next run on.
       - name: Deploy
         run: |

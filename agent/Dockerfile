@@ -4,7 +4,7 @@ FROM node:24-bookworm-slim
 
 # Tools used by the scripts in bin/
 RUN apt-get update \
- && apt-get install -y --no-install-recommends ca-certificates curl jq sqlite3 python3 \
+ && apt-get install -y --no-install-recommends ca-certificates curl jq sqlite3 python3 awscli \
  && rm -rf /var/lib/apt/lists/*
 
 # Same Pi version as the local install.
@@ -26,6 +26,4 @@ USER 1000
 WORKDIR /work
 
 # The search round; the dataset agent's CronJob runs explore.sh instead.
-CMD ["pi", "-p", "--no-session", "--model", "einfra/kimi-k3", \
-     "--append-system-prompt", "/app/agent/instructions.md", \
-     "Run today's search round."]
+CMD ["search-round.sh"]
