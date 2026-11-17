@@ -31,6 +31,11 @@ spec:
                     secretKeyRef:
                       name: llm-api
                       key: LLM_API_KEY
+              envFrom:
+                - configMapRef:
+                    name: r2-bucket    # R2_ENDPOINT, R2_BUCKET, AWS_DEFAULT_REGION for publish.sh
+                - secretRef:
+                    name: r2-api       # AWS_ACCESS_KEY_ID, AWS_SECRET_ACCESS_KEY (the R2 token)
               securityContext:
                 runAsUser: 1000
                 allowPrivilegeEscalation: false

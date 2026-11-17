@@ -9,6 +9,15 @@ resources:
   - cronjob.yaml
   - dataset-agent.yaml
 
+# Where publish.sh uploads the CSV exports. Not secret; the API token is the
+# r2-api Secret, created by the deploy workflow.
+configMapGenerator:
+  - name: r2-bucket
+    literals:
+      - R2_ENDPOINT=https://TODO-ACCOUNT-ID.r2.cloudflarestorage.com
+      - R2_BUCKET=TODO-BUCKET
+      - AWS_DEFAULT_REGION=auto
+
 images:
   - name: cerit.io/dvdkouril/paper-agent
     newTag: latest

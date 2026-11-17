@@ -50,7 +50,9 @@ for doi in "${queue[@]}"; do
   dir=$work/paper-$n
   rm -rf "$dir" && mkdir -p "$dir" && cd "$dir" || exit 1
 
+  # Pi runs without the R2 token; only publish.sh needs it.
   PAPER_DOI=$doi ${limit[@]+"${limit[@]}"} \
+    env -u AWS_ACCESS_KEY_ID -u AWS_SECRET_ACCESS_KEY \
     pi -p --no-session --model einfra/kimi-k3 \
       --append-system-prompt "$here/datasets-instructions.md" \
       "Find the data links of the paper $doi." >answer.txt 2>&1 </dev/null
@@ -75,3 +77,6 @@ cd "$work" && rm -f "$snapshot"
 echo
 echo "Explorations so far:"
 sqlite3 "$db" "SELECT '  ' || status || ': ' || count(*) FROM explorations GROUP BY status"
+
+echo
+"$here/bin/publish.sh"
