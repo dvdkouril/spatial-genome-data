@@ -1,0 +1,67 @@
+# The inspection agent: looks at dataset links the papers produced and reports
+# whether they hold 3D structures (bin/inspect.sh). Same image as the other
+# agents; image tag is set by the kustomization. Suspended while we test: it only
+# runs when started by hand, on every link not looked at yet.
+# Run a pass now:  kubectl -n kouril1-ns create job --from=cronjob/inspection-agent manual-inspect-1
+# Read reports:    kubectl -n kouril1-ns logs -f job/manual-inspect-1
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: inspection-agent
+spec:
+  suspend: true                    # no scheduled runs yet
+  schedule: "30 5 * * *"           # placeholder, unused while suspended
+  timeZone: Europe/Prague
+  concurrencyPolicy: Forbid
+  successfulJobsHistoryLimit: 3    # keep the last finished pods, so their logs stay readable
+  failedJobsHistoryLimit: 3
+  jobTemplate:
+    spec:
+      backoffLimit: 0              # a failed pass is not retried
+      activeDeadlineSeconds: 86400 # safety net; each link also has its own time limit
+      template:
+        spec:
+          restartPolicy: Never
+          securityContext:
+            runAsNonRoot: true
+            seccompProfile:
+              type: RuntimeDefault
+          containers:
+            - name: agent
+              image: cerit.io/dvdkouril/paper-agent
+              args: ["inspect.sh"]   # every link not looked at yet, in random order
+              env:
+                - name: LLM_API_KEY
+                  valueFrom:
+                    secretKeyRef:
+                      name: llm-api
+                      key: LLM_API_KEY
+                - name: LINK_TIMEOUT
+                  value: 20m
+              securityContext:
+                runAsUser: 1000
+                allowPrivilegeEscalation: false
+                capabilities:
+                  drop:
+                    - ALL
+              resources:
+                requests:
+                  cpu: 500m
+                  memory: 1Gi
+                  ephemeral-storage: 5Gi
+                limits:
+                  cpu: "2"
+                  memory: 4Gi              # room for loading a sample of a large file
+                  ephemeral-storage: 25Gi  # downloads + uv cache; the instructions say 20 GB
+              volumeMounts:
+                - name: data
+                  mountPath: /data
+                - name: work
+                  mountPath: /work
+          volumes:
+            - name: data
+              persistentVolumeClaim:
+                claimName: paper-agent-data   # reads datasets.db, writes inspections.db
+            - name: work
+              emptyDir:
+                sizeLimit: 20Gi    # the pod is evicted if downloads go past this
