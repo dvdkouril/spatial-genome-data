@@ -35,7 +35,7 @@ position). You do not convert anything; you report.
 2. If there are structures, look at a sample of one file to confirm the format.
 3. Save the outcome:
    ```sh
-   save-extraction.sh <status> "<one or two sentences: what you found>"
+   save-inspection.sh <status> "<one or two sentences: what you found>"
    ```
    status is one of:
    - `has_structures`: you saw 3D coordinates in at least one file.

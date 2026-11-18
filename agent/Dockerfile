@@ -1,4 +1,4 @@
-# The paper agents (literature search, dataset links, structure extraction): Pi plus the tools their scripts need.
+# The paper agents (literature search, dataset links, structure inspection): Pi plus the tools their scripts need.
 #   docker build --platform linux/amd64 -t paper-agent agent
 FROM node:24-bookworm-slim
 
@@ -7,7 +7,7 @@ RUN apt-get update \
  && apt-get install -y --no-install-recommends ca-certificates curl jq sqlite3 python3 awscli \
  && rm -rf /var/lib/apt/lists/*
 
-# uv: the extraction agent's only way to Python; it installs packages as needed.
+# uv: the inspection agent's only way to Python; it installs packages as needed.
 COPY --from=ghcr.io/astral-sh/uv:0.13.5 /uv /uvx /usr/local/bin/
 
 # Same Pi version as the local install.
@@ -17,13 +17,13 @@ RUN npm install -g @earendil-works/pi-coding-agent@1.1.0
 # Owned by user 1000, because Pi writes its runtime files into this folder.
 COPY --chown=1000:1000 models.json instructions.md schema.sql \
      datasets-instructions.md datasets-schema.sql \
-     extraction-instructions.md extraction-schema.sql /app/agent/
+     inspection-instructions.md inspection-schema.sql /app/agent/
 COPY --chown=1000:1000 bin/ /app/agent/bin/
 
 ENV PI_CODING_AGENT_DIR=/app/agent \
     PAPERS_DB=/data/papers.db \
     DATASETS_DB=/data/datasets.db \
-    EXTRACTIONS_DB=/data/extractions.db \
+    INSPECTIONS_DB=/data/inspections.db \
     UV_CACHE_DIR=/work/.uv-cache \
     UV_PYTHON_INSTALL_DIR=/work/.uv-python \
     PATH=/app/agent/bin:$PATH
@@ -32,5 +32,5 @@ ENV PI_CODING_AGENT_DIR=/app/agent \
 USER 1000
 WORKDIR /work
 
-# The search round; the other agents' CronJobs run explore.sh / extract.sh instead.
+# The search round; the other agents' CronJobs run explore.sh / inspect.sh instead.
 CMD ["search-round.sh"]
