@@ -1,7 +1,7 @@
 # The inspection agent: looks at dataset links the papers produced and reports
 # whether they hold 3D structures (bin/inspect.sh). Same image as the other
 # agents; image tag is set by the kustomization. Suspended while we test: it only
-# runs when started by hand, on 50 random links, and the reports are in the logs.
+# runs when started by hand, on every link not looked at yet.
 # Run a pass now:  kubectl -n kouril1-ns create job --from=cronjob/inspection-agent manual-inspect-1
 # Read reports:    kubectl -n kouril1-ns logs -f job/manual-inspect-1
 apiVersion: batch/v1
@@ -29,7 +29,7 @@ spec:
           containers:
             - name: agent
               image: cerit.io/dvdkouril/paper-agent
-              args: ["inspect.sh", "50"]   # 50 random links not looked at yet
+              args: ["inspect.sh"]   # every link not looked at yet, in random order
               env:
                 - name: LLM_API_KEY
                   valueFrom:

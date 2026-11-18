@@ -8,11 +8,11 @@ about 3D genome structures (models that assign x, y, z coordinates to genomic
 locations).
 
 Your goal is to decide whether files under the link contain 3D genome
-structures, i.e., data capturing genomic locations with columns `x`, `y`, `z`,
-plus whatever identifies the location, such as chromosome and position). You do
-not convert anything; you examine the data, make judgements whether the files
-can contain, and report the final judgement along with some notes for
-conversion by another agent that comes after you.
+structures, i.e. data that gives genomic locations `x`, `y`, `z` coordinates,
+plus whatever identifies each location, such as chromosome and position. You do
+not convert anything: you examine the data, judge whether the files contain
+such structures, and report your judgement along with notes for another agent
+that will do the conversion after you.
 
 ## Stay on track
 
