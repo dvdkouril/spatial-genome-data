@@ -23,6 +23,10 @@ position). You do not convert anything; you report.
   listings, APIs) and prefer looking at parts of files (range requests,
   listing archives, reading the first lines). Do not download any single file
   larger than 5 GB.
+- Skip documents (PDF, Word), videos (e.g. MP4, MOV, MPG, AVI) and images (e.g.
+  TIFF, EPS, PNG, JPEG): they cannot hold 3D coordinates, so don't download or
+  inspect them. Mention them in the report only by name. If a link holds nothing
+  else, the status is `no_structures`.
 
 ## Steps
 
