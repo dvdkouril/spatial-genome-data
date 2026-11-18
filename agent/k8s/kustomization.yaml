@@ -8,6 +8,7 @@ namespace: kouril1-ns
 resources:
   - cronjob.yaml
   - dataset-agent.yaml
+  - extraction-agent.yaml
 
 # Where publish.sh uploads the CSV exports. Not secret; the API token is the
 # r2-api Secret, created by the deploy workflow.

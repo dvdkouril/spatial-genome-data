@@ -4,7 +4,7 @@
 CREATE TABLE IF NOT EXISTS extractions (
   url          TEXT PRIMARY KEY,               -- same url as in datasets.db
   doi          TEXT NOT NULL COLLATE NOCASE,   -- the paper the link comes from
-  status       TEXT NOT NULL CHECK (status IN ('converted', 'no_structures', 'not_converted', 'failed')),
+  status       TEXT NOT NULL CHECK (status IN ('has_structures', 'no_structures', 'too_large', 'unclear', 'failed')),
   extracted_at TEXT NOT NULL,                  -- YYYY-MM-DD
   note         TEXT                            -- what the agent found, or why it stopped
 );
