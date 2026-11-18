@@ -23,13 +23,21 @@ snapshot=$work/datasets-snapshot.db
 rm -f "$snapshot"
 sqlite3 "$datasets" ".backup '${snapshot//\'/\'\'}'"
 
-# One line per link: id, doi and url, separated by tabs.
+# One line per link: id, doi and url, separated by tabs. Links to documents,
+# videos and images are skipped: they cannot hold 3D coordinates.
 queue=()
 while IFS= read -r line; do queue+=("$line"); done < <(sqlite3 -separator $'\t' "$db" "
   ATTACH '${snapshot//\'/\'\'}' AS d;
   SELECT rowid, doi, url FROM d.datasets
   WHERE role = 'produced'
     AND url NOT IN (SELECT url FROM extractions)
+    AND lower(url) NOT LIKE '%.pdf'
+    AND lower(url) NOT LIKE '%.mp4'
+    AND lower(url) NOT LIKE '%.mov'
+    AND lower(url) NOT LIKE '%.mpg'
+    AND lower(url) NOT LIKE '%.tif'
+    AND lower(url) NOT LIKE '%.eps'
+    AND lower(url) NOT LIKE '%.png'
   ORDER BY random()
   LIMIT $max")
 echo "${#queue[@]} links to look at."
