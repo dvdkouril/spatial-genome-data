@@ -5,8 +5,8 @@
 #   extract.sh [max links]
 # Reads $DATASETS_DB (never writes it), writes $EXTRACTIONS_DB. Each link gets
 # its own work folder link-<id> in the current directory; it is deleted after
-# the link (downloads can be large) unless KEEP_LINK_DIRS=1. The agent's report
-# for every link is printed, so it can be read in the logs.
+# the link (downloads can be large) unless KEEP_LINK_DIRS=1. Everything the
+# agent does is printed as it happens, so it can be followed in the logs.
 set -uo pipefail
 
 datasets=${DATASETS_DB:?set DATASETS_DB to the datasets database}
@@ -50,12 +50,14 @@ for line in "${queue[@]}"; do
 
   echo
   echo "=== [$n/${#queue[@]}] $url (paper $doi) ==="
+  # Every step the agent takes (thinking, commands and their output, its
+  # answer) is printed as it happens, made readable from Pi's JSON events.
   LINK_URL=$url PAPER_DOI=$doi ${limit[@]+"${limit[@]}"} \
-    pi -p --no-session --model einfra/kimi-k3 \
+    pi -p --mode json --no-session --model einfra/kimi-k3 \
       --append-system-prompt "$here/extraction-instructions.md" \
-      "Look at the dataset $url from the paper $doi." >answer.txt 2>&1 </dev/null
-  code=$?
-  cat answer.txt
+      "Look at the dataset $url from the paper $doi." 2>&1 </dev/null \
+    | jq --unbuffered -rR -f "$here/bin/readable-events.jq"
+  code=${PIPESTATUS[0]}
 
   q=${url//\'/\'\'}
   status=$(sqlite3 "$db" "SELECT status FROM extractions WHERE url = '$q'")
