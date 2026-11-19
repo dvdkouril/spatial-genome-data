@@ -61,7 +61,9 @@ for line in "${queue[@]}"; do
   echo "=== [$n/${#queue[@]}] $url (paper $doi) ==="
   # Every step the agent takes (thinking, commands and their output, its
   # answer) is printed as it happens, made readable from Pi's JSON events.
+  # Pi runs without the R2 token; only publish.sh needs it.
   LINK_URL=$url PAPER_DOI=$doi ${limit[@]+"${limit[@]}"} \
+    env -u AWS_ACCESS_KEY_ID -u AWS_SECRET_ACCESS_KEY \
     pi -p --mode json --no-session --model einfra/kimi-k3 \
       --append-system-prompt "$here/inspection-instructions.md" \
       "Look at the dataset $url from the paper $doi." 2>&1 </dev/null \
@@ -88,9 +90,14 @@ for line in "${queue[@]}"; do
   echo "=== [$n/${#queue[@]}] $url: $status ==="
   cd "$work"
   [[ ${KEEP_LINK_DIRS:-} == 1 ]] || rm -rf "$dir"
+  # Publish along the way, so a long pass shows up before it ends.
+  if ((n % 10 == 0)); then "$here/bin/publish.sh" "$db" || echo "Publishing failed; continuing."; fi
 done
 rm -f "$snapshot"
 
 echo
 echo "Inspections so far:"
 sqlite3 "$db" "SELECT '  ' || status || ': ' || count(*) FROM inspections GROUP BY status"
+
+echo
+"$here/bin/publish.sh" "$db"

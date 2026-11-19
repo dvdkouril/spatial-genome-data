@@ -1,0 +1,48 @@
+# One-off pod that publishes database tables to R2 (bin/publish.sh), started
+# by the "Publish agent databases" workflow. TARGETS is set by the workflow:
+# databases in /data, optionally with tables, e.g. "papers.db inspections.db"
+# or "datasets.db:datasets"; "*.db" is all of them.
+apiVersion: v1
+kind: Pod
+metadata:
+  name: db-export
+  namespace: kouril1-ns
+spec:
+  restartPolicy: Never
+  activeDeadlineSeconds: 900   # gives up after 15 minutes
+  securityContext:
+    runAsNonRoot: true
+    seccompProfile:
+      type: RuntimeDefault
+  containers:
+    - name: export
+      image: cerit.io/dvdkouril/paper-agent:latest   # has sqlite3, aws and publish.sh
+      command: ["bash", "-c", "cd /data && publish.sh $TARGETS"]
+      env:
+        - name: TARGETS
+          value: "*.db"
+      envFrom:
+        - configMapRef:
+            name: r2-bucket    # R2_ENDPOINT, R2_BUCKET, AWS_DEFAULT_REGION
+        - secretRef:
+            name: r2-api       # AWS_ACCESS_KEY_ID, AWS_SECRET_ACCESS_KEY
+      securityContext:
+        runAsUser: 1000
+        allowPrivilegeEscalation: false
+        capabilities:
+          drop:
+            - ALL
+      resources:
+        requests:
+          cpu: 100m
+          memory: 128Mi
+        limits:
+          cpu: 500m
+          memory: 512Mi
+      volumeMounts:
+        - name: data
+          mountPath: /data
+  volumes:
+    - name: data
+      persistentVolumeClaim:
+        claimName: paper-agent-data
