@@ -71,6 +71,8 @@ for doi in "${queue[@]}"; do
     echo "[$n/${#queue[@]}] $doi: $status ($links links)"
   fi
   cd "$work" && rm -rf "$dir"
+  # Publish along the way, so a long pass shows up before it ends.
+  if ((n % 10 == 0)); then "$here/bin/publish.sh" "$db" || echo "Publishing failed; continuing."; fi
 done
 cd "$work" && rm -f "$snapshot"
 
@@ -79,4 +81,4 @@ echo "Explorations so far:"
 sqlite3 "$db" "SELECT '  ' || status || ': ' || count(*) FROM explorations GROUP BY status"
 
 echo
-"$here/bin/publish.sh"
+"$here/bin/publish.sh" "$db"

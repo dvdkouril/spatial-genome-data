@@ -1,0 +1,58 @@
+name: Publish agent databases
+
+# Uploads database tables from the cluster to R2 as CSV, on demand. The agents
+# also publish their own tables as they run; this is for "everything now".
+on:
+  workflow_dispatch:
+    inputs:
+      targets:
+        description: 'Databases in /data, optionally with tables, e.g. "papers.db inspections.db" or "datasets.db:datasets"; "*.db" is all'
+        default: "*.db"
+        required: true
+
+concurrency:
+  group: publish-agent-data
+  cancel-in-progress: false
+
+env:
+  NS: kouril1-ns
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Configure kubectl
+        env:
+          KUBECONFIG_DATA: ${{ secrets.KUBECONFIG }}
+        run: |
+          mkdir -p ~/.kube
+          printf '%s' "$KUBECONFIG_DATA" > ~/.kube/config
+          chmod 600 ~/.kube/config
+
+      # The pod runs publish.sh next to the data, with the agents' R2 token.
+      - name: Start the export pod
+        id: start
+        env:
+          TARGETS: ${{ inputs.targets }}
+        run: |
+          kubectl delete pod db-export -n "$NS" --ignore-not-found --wait
+          echo "created=true" >> "$GITHUB_OUTPUT"
+          yq '(.spec.containers[0].env[] | select(.name == "TARGETS")).value = strenv(TARGETS)' \
+            agent/k8s/setup/db-export.yaml | kubectl apply -f -
+
+      - name: Wait for it to finish
+        run: |
+          for _ in $(seq 180); do
+            phase=$(kubectl get pod db-export -n "$NS" -o jsonpath='{.status.phase}')
+            [[ $phase == Succeeded || $phase == Failed ]] && break
+            sleep 5
+          done
+          kubectl logs db-export -n "$NS" || true
+          [[ $phase == Succeeded ]] || { echo "::error::Export pod ended as ${phase:-unknown}."; exit 1; }
+
+      - name: Delete the export pod
+        if: always() && steps.start.outputs.created == 'true'
+        run: kubectl delete pod db-export -n "$NS" --ignore-not-found

@@ -94,9 +94,9 @@ for line in "${queue[@]}"; do
   echo
   echo "=== [$n/${#queue[@]}] $url (paper $doi) -> datasets/$folder ==="
   # Every step the agent takes is printed as it happens; Pi runs without the
-  # GitHub token, the wrapper pushes.
+  # GitHub and R2 tokens, the wrapper pushes and publishes.
   LINK_URL=$url PAPER_DOI=$doi DATASET_FOLDER=$folder ${limit[@]+"${limit[@]}"} \
-    env -u GITHUB_TOKEN -u GH_TOKEN \
+    env -u GITHUB_TOKEN -u GH_TOKEN -u AWS_ACCESS_KEY_ID -u AWS_SECRET_ACCESS_KEY \
     pi -p --mode json --no-session --model einfra/kimi-k3 \
       --append-system-prompt "$here/extraction-instructions.md" \
       "Convert the dataset $url from the paper $doi. You are in its folder datasets/$folder.
@@ -166,6 +166,8 @@ $report" 2>&1 </dev/null \
     fi
   fi
   echo "=== [$n/${#queue[@]}] $url: $status ==="
+  # After every link, so new pull requests show up right away.
+  "$here/bin/publish.sh" "$db" || echo "Publishing failed; continuing."
 done
 rm -f "$snapshot"
 

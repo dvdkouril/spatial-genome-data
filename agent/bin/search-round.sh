@@ -12,5 +12,5 @@ env -u AWS_ACCESS_KEY_ID -u AWS_SECRET_ACCESS_KEY \
 code=$?
 
 echo
-"$(dirname "$0")/publish.sh" || exit
+"$(dirname "$0")/publish.sh" "$PAPERS_DB" || exit
 exit $code
