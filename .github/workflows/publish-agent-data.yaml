@@ -33,14 +33,19 @@ jobs:
           chmod 600 ~/.kube/config
 
       # The pod runs publish.sh next to the data, with the agents' R2 token.
+      # Kustomize adds a hash to the r2-bucket ConfigMap's name; the pod is
+      # applied outside kustomize, so it gets the generated name here.
       - name: Start the export pod
         id: start
         env:
           TARGETS: ${{ inputs.targets }}
         run: |
+          CONFIGMAP=$(kubectl kustomize agent/k8s | yq 'select(.kind == "ConfigMap") | .metadata.name')
+          export CONFIGMAP
           kubectl delete pod db-export -n "$NS" --ignore-not-found --wait
           echo "created=true" >> "$GITHUB_OUTPUT"
-          yq '(.spec.containers[0].env[] | select(.name == "TARGETS")).value = strenv(TARGETS)' \
+          yq '(.spec.containers[0].env[] | select(.name == "TARGETS")).value = strenv(TARGETS)
+              | .spec.containers[0].envFrom[0].configMapRef.name = strenv(CONFIGMAP)' \
             agent/k8s/setup/db-export.yaml | kubectl apply -f -
 
       - name: Wait for it to finish
@@ -48,6 +53,13 @@ jobs:
           for _ in $(seq 180); do
             phase=$(kubectl get pod db-export -n "$NS" -o jsonpath='{.status.phase}')
             [[ $phase == Succeeded || $phase == Failed ]] && break
+            # Stuck before starting (bad config, image can't be pulled): stop waiting.
+            waiting=$(kubectl get pod db-export -n "$NS" -o jsonpath='{.status.containerStatuses[0].state.waiting.reason}')
+            if [[ $waiting == *Error* || $waiting == *BackOff* ]]; then
+              kubectl get events -n "$NS" --field-selector involvedObject.name=db-export | tail -5
+              phase="stuck ($waiting)"
+              break
+            fi
             sleep 5
           done
           kubectl logs db-export -n "$NS" || true
