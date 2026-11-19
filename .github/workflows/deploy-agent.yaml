@@ -67,6 +67,16 @@ jobs:
             --from-literal=AWS_SECRET_ACCESS_KEY="$AWS_SECRET_ACCESS_KEY" \
             --dry-run=client -o yaml | kubectl apply -f -
 
+      # The token the extraction agent pushes branches and opens pull requests
+      # with: fine-grained, this repository only, contents + pull requests: write.
+      - name: Update GitHub token secret
+        env:
+          GITHUB_TOKEN: ${{ secrets.AGENT_GITHUB_TOKEN }}
+        run: |
+          kubectl create secret generic github-token -n kouril1-ns \
+            --from-literal=GITHUB_TOKEN="$GITHUB_TOKEN" \
+            --dry-run=client -o yaml | kubectl apply -f -
+
       # Only updates the CronJob; the new image is used from the next run on.
       - name: Deploy
         run: |
