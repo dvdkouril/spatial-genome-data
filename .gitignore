@@ -29,3 +29,8 @@ agent/auth.json
 agent/models-store.json
 agent/settings.json
 agent/sessions/
+
+# the extraction agent's notebooks: downloads, outputs and marimo's cache stay local
+datasets/*/data/
+datasets/*/out/
+__marimo__/
