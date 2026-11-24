@@ -19,10 +19,10 @@ Process:
 - Downloaded `GSE80280_RAW.tar` (19.7 Gb) from the GEO repository.
 - Copied only the cell structures (identified by the `.pdb` file).
 
-Run the notebook for data processing using [juv](https://github.com/manzt/juv). 
+Run the notebook for data processing using [uv](https://docs.astral.sh/uv/):
 ```sh
 cd stevens-2017
-juv run notebook.ipynb
+uv run notebook.py
 ```
 
 ---

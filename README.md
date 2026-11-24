@@ -13,11 +13,12 @@ into individual structures. The input data are not tracked in the repo, but
 each subfolder contains a description of how they were obtained. The notebook
 can be run locally or through Github Actions.
 
-For example, running the notebook for data processing using
-[juv](https://github.com/manzt/juv):
+The notebooks are [marimo](https://marimo.io) notebooks that declare their
+dependencies inline, so they run with [uv](https://docs.astral.sh/uv/):
 ```sh
 cd stevens-2017
-juv run notebook.ipynb
+uv run notebook.py                    # run the conversion as a script
+uvx marimo edit --sandbox notebook.py # or open it in marimo
 ```
 
 ## Why

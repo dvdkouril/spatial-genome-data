@@ -33,12 +33,11 @@ jobs:
         uses: astral-sh/setup-uv@v3
         with:
           version: "0.4.x"
-      - run: uv tool install juv
-      - name: Process files via notebook.ipynb (Stevens)
-        run: juv exec notebook.ipynb
+      - name: Process files via notebook.py (Stevens)
+        run: uv run notebook.py
         working-directory: ./stevens-2017
-      - name: Process files via notebook.ipynb (Tan)
-        run: juv exec notebook.ipynb
+      - name: Process files via notebook.py (Tan)
+        run: uv run notebook.py
         working-directory: ./tan-2018
 
       - uses: denoland/setup-deno@v2
