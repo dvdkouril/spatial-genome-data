@@ -16,7 +16,7 @@ can be run locally or through Github Actions.
 The notebooks are [marimo](https://marimo.io) notebooks that declare their
 dependencies inline, so they run with [uv](https://docs.astral.sh/uv/):
 ```sh
-cd stevens-2017
+cd datasets/stevens-2017
 uv run notebook.py                    # run the conversion as a script
 uvx marimo edit --sandbox notebook.py # or open it in marimo
 ```

@@ -21,7 +21,7 @@ Process:
 
 Run the notebook for data processing using [uv](https://docs.astral.sh/uv/):
 ```sh
-cd stevens-2017
+cd datasets/stevens-2017
 uv run notebook.py
 ```
 
